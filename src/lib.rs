@@ -80,23 +80,45 @@ fn key_conv(code: Key) -> Option<egui::Key> {
     })
 }
 
+fn modifier(alt: bool, ctrl: bool, shift: bool) -> egui::Modifiers {
+    egui::Modifiers {
+        alt,
+        ctrl,
+        shift,
+        command: false,
+        mac_cmd: false,
+    }
+}
+
 /// Converts an SFML event to an egui event and adds it to the `RawInput`.
 pub fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
     match *event {
-        Event::KeyPressed { code, .. } => {
+        Event::KeyPressed {
+            code,
+            alt,
+            ctrl,
+            shift,
+            system: _,
+        } => {
             if let Some(key) = key_conv(code) {
                 raw_input.events.push(egui::Event::Key {
                     key,
-                    modifiers: egui::Modifiers::default(),
+                    modifiers: modifier(alt, ctrl, shift),
                     pressed: true,
                 });
             }
         }
-        Event::KeyReleased { code, .. } => {
+        Event::KeyReleased {
+            code,
+            alt,
+            ctrl,
+            shift,
+            system: _,
+        } => {
             if let Some(key) = key_conv(code) {
                 raw_input.events.push(egui::Event::Key {
                     key,
-                    modifiers: egui::Modifiers::default(),
+                    modifiers: modifier(alt, ctrl, shift),
                     pressed: false,
                 });
             }
