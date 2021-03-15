@@ -6,7 +6,7 @@
 
 use egui::{Event as EguiEv, Modifiers, PointerButton, Pos2, RawInput, TextureId};
 use sfml::graphics::{
-    Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex, VertexArray,
+    Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
 };
 use sfml::{
     window::{mouse, Event, Key},
@@ -200,10 +200,11 @@ pub fn draw<TexSrc: UserTexSource>(
     shapes: Vec<egui::epaint::ClippedShape>,
     user_tex_source: &mut TexSrc,
 ) {
+    let mut vertices = Vec::new();
+    let (egui_tex_w, egui_tex_h) = (tex.size().x as f32, tex.size().y as f32);
     for egui::ClippedMesh(_rect, mesh) in egui_ctx.tessellate(shapes) {
-        let mut arr = VertexArray::new(PrimitiveType::TRIANGLES, mesh.indices.len());
         let (tw, th, tex) = match mesh.texture_id {
-            TextureId::Egui => (tex.size().x as f32, tex.size().y as f32, &*tex),
+            TextureId::Egui => (egui_tex_w, egui_tex_h, &*tex),
             TextureId::User(id) => user_tex_source.get_texture(id),
         };
         for idx in mesh.indices {
@@ -213,10 +214,11 @@ pub fn draw<TexSrc: UserTexSource>(
                 Color::rgba(v.color.r(), v.color.g(), v.color.b(), v.color.a()),
                 (v.uv.x * tw, v.uv.y * th).into(),
             );
-            arr.append(&sf_v);
+            vertices.push(sf_v);
         }
         let mut rs = RenderStates::default();
         rs.set_texture(Some(&tex));
-        window.draw_with_renderstates(&arr, &rs);
+        window.draw_primitives(&vertices, PrimitiveType::TRIANGLES, &rs);
+        vertices.clear();
     }
 }
