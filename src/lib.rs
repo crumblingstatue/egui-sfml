@@ -239,7 +239,7 @@ pub fn draw<TexSrc: UserTexSource>(
             vertices.push(sf_v);
         }
         let mut rs = RenderStates::default();
-        rs.set_texture(Some(&tex));
+        rs.set_texture(Some(tex));
         window.draw_primitives(&vertices, PrimitiveType::TRIANGLES, &rs);
         vertices.clear();
     }
