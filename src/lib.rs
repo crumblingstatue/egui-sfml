@@ -226,7 +226,7 @@ pub fn draw<TexSrc: UserTexSource>(
     let (egui_tex_w, egui_tex_h) = (tex.size().x as f32, tex.size().y as f32);
     for egui::ClippedMesh(_rect, mesh) in egui_ctx.tessellate(shapes) {
         let (tw, th, tex) = match mesh.texture_id {
-            TextureId::Egui => (egui_tex_w, egui_tex_h, &*tex),
+            TextureId::Egui => (egui_tex_w, egui_tex_h, tex),
             TextureId::User(id) => user_tex_source.get_texture(id),
         };
         for idx in mesh.indices {
