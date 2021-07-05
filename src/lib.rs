@@ -85,7 +85,7 @@ fn modifier(alt: bool, ctrl: bool, shift: bool) -> egui::Modifiers {
         alt,
         ctrl,
         shift,
-        command: false,
+        command: ctrl,
         mac_cmd: false,
     }
 }
