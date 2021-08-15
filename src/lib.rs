@@ -174,11 +174,18 @@ fn egui_tex_to_rgba_vec(tex: &egui::Texture) -> Vec<u8> {
 }
 
 /// Creates the egui texture that contains the font, etc.
-pub fn create_texture(ctx: &mut egui::CtxRef, window: &RenderWindow) -> SfBox<Texture> {
+///
+/// Must create the texture with this first, as we need to do some egui setup
+pub fn get_first_texture(ctx: &mut egui::CtxRef, window: &RenderWindow) -> SfBox<Texture> {
     // We need to run an egui frame once before we can get the texture
     let raw_input = make_raw_input(window);
     ctx.begin_frame(raw_input);
     let _ = ctx.end_frame();
+    get_new_texture(ctx)
+}
+
+/// Update the texture every frame with this
+pub fn get_new_texture(ctx: &egui::CtxRef) -> SfBox<Texture> {
     let egui_tex = ctx.texture();
     let mut tex = Texture::new(egui_tex.width as u32, egui_tex.height as u32).unwrap();
     let tex_pixels = egui_tex_to_rgba_vec(&egui_tex);
