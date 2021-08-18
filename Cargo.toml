@@ -8,6 +8,6 @@ edition = "2018"
 egui = "0.13.0"
 
 [dependencies.sfml]
-version = "0.16.0"
+git = "https://github.com/jeremyletang/rust-sfml.git"
 default-features = false
 features = ["graphics"]
