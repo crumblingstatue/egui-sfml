@@ -165,7 +165,7 @@ pub fn make_raw_input(window: &RenderWindow) -> RawInput {
 }
 
 fn egui_tex_to_rgba_vec(tex: &egui::Texture) -> Vec<u8> {
-    let srgba = tex.srgba_pixels();
+    let srgba = tex.srgba_pixels(1.0);
     let mut vec = Vec::new();
     for c in srgba {
         vec.extend_from_slice(&c.to_array());
