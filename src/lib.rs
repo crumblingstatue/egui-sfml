@@ -204,6 +204,25 @@ pub trait UserTexSource {
     fn get_texture(&mut self, id: u64) -> (f32, f32, &Texture);
 }
 
+/// A dummy texture source in case you don't care about providing user textures
+pub struct DummyTexSource {
+    tex: SfBox<Texture>,
+}
+
+impl Default for DummyTexSource {
+    fn default() -> Self {
+        Self {
+            tex: Texture::new().unwrap(),
+        }
+    }
+}
+
+impl UserTexSource for DummyTexSource {
+    fn get_texture(&mut self, _id: u64) -> (f32, f32, &Texture) {
+        (0., 0., &self.tex)
+    }
+}
+
 /// Draw the egui ui using a `RenderWindow`.
 ///
 /// # Parameters
