@@ -274,8 +274,11 @@ impl SfEgui {
         )
     }
     /// Returns a handle to the egui context
-    pub fn context(&self) -> CtxRef {
-        self.ctx.clone()
+    ///
+    /// `CtxRef` can be cloned, but beware that it will be outdated after a call to
+    /// [`do_frame`](Self::do_frame)
+    pub fn context(&self) -> &CtxRef {
+        &self.ctx
     }
 }
 
