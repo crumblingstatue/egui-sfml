@@ -1,4 +1,5 @@
 use egui::{CtxRef, Window};
+use egui_sfml::SfEgui;
 use sfml::{
     graphics::{Color, RenderTarget, RenderWindow},
     window::{ContextSettings, Event, Style},
@@ -20,26 +21,22 @@ fn main() {
         &ContextSettings::default(),
     );
     rw.set_vertical_sync_enabled(true);
-    let mut ctx = CtxRef::default();
+    // Step 1: Create an SfEgui
+    let mut sfegui = SfEgui::new(&rw);
 
     while rw.is_open() {
-        let mut raw_input = egui_sfml::make_raw_input(&rw);
         while let Some(event) = rw.poll_event() {
-            egui_sfml::handle_event(&mut raw_input, &event);
+            // Step 2: Collect events from the event loop
+            sfegui.add_event(&event);
             if matches!(event, Event::Closed) {
                 rw.close();
             }
         }
-        ctx.begin_frame(raw_input);
-        ui(&ctx);
-        let frame_result = ctx.end_frame();
+        // Step 3: Do an egui frame with the desired ui function
+        sfegui.do_frame(ui);
         rw.clear(Color::BLACK);
-        egui_sfml::draw(
-            &mut rw,
-            &ctx,
-            frame_result.1,
-            &mut egui_sfml::DummyTexSource::default(),
-        );
+        // Step 4: Draw
+        sfegui.draw(&mut rw, None);
         rw.display();
     }
 }

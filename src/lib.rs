@@ -4,7 +4,10 @@
 
 #![warn(missing_docs)]
 
-use egui::{Event as EguiEv, Modifiers, PointerButton, Pos2, RawInput, TextureId};
+use std::mem;
+
+use egui::epaint::ClippedShape;
+use egui::{CtxRef, Event as EguiEv, Modifiers, Output, PointerButton, Pos2, RawInput, TextureId};
 use sfml::graphics::blend_mode::Factor;
 use sfml::graphics::{
     BlendMode, Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
@@ -92,7 +95,7 @@ fn modifier(alt: bool, ctrl: bool, shift: bool) -> egui::Modifiers {
 }
 
 /// Converts an SFML event to an egui event and adds it to the `RawInput`.
-pub fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
+fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
     match *event {
         Event::KeyPressed {
             code,
@@ -155,7 +158,7 @@ pub fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event)
 }
 
 /// Creates a `RawInput` that fits the window.
-pub fn make_raw_input(window: &RenderWindow) -> RawInput {
+fn make_raw_input(window: &RenderWindow) -> RawInput {
     RawInput {
         screen_rect: Some(egui::Rect {
             min: Pos2::new(0., 0.),
@@ -205,7 +208,7 @@ pub trait UserTexSource {
 }
 
 /// A dummy texture source in case you don't care about providing user textures
-pub struct DummyTexSource {
+struct DummyTexSource {
     tex: SfBox<Texture>,
 }
 
@@ -223,21 +226,60 @@ impl UserTexSource for DummyTexSource {
     }
 }
 
-/// Draw the egui ui using a `RenderWindow`.
-///
-/// # Parameters
-///
-/// - `window`: The `RenderWindow` to draw to.
-/// - `egui_ctx`: The egui context
-/// - `tex`: The egui texture that contains the font, etc.
-/// - `shapes`: The shapes contained by the output of `egui_ctx.end_frame()`/
-/// - `user_tex_source`: This is used to get the texture for a user-defined texture.
-///   See [`UserTexSource`].
-pub fn draw<TexSrc: UserTexSource>(
+/// `Egui` integration for SFML.
+pub struct SfEgui {
+    ctx: CtxRef,
+    raw_input: RawInput,
+    egui_result: (Output, Vec<ClippedShape>),
+}
+
+impl SfEgui {
+    /// Create a new `SfEgui`.
+    ///
+    /// The size of the egui ui will be the same as `window`'s size.
+    pub fn new(window: &RenderWindow) -> Self {
+        Self {
+            raw_input: make_raw_input(window),
+            ctx: CtxRef::default(),
+            egui_result: Default::default(),
+        }
+    }
+    /// Convert an SFML event into an egui event and add it for later use by egui.
+    ///
+    /// Call this in an event polling loop for each event.
+    pub fn add_event(&mut self, event: &Event) {
+        handle_event(&mut self.raw_input, event);
+    }
+    /// Does an egui frame with a user supplied ui function.
+    ///
+    /// The `f` parameter is a user supplied ui function that does the desired ui
+    pub fn do_frame(&mut self, f: impl FnOnce(&CtxRef)) {
+        self.ctx.begin_frame(self.raw_input.take());
+        f(&self.ctx);
+        self.egui_result = self.ctx.end_frame();
+    }
+    /// Draw the ui to a `RenderWindow`.
+    ///
+    /// Takes an optional [`UserTexSource`] to act as a user texture source.
+    pub fn draw(
+        &mut self,
+        window: &mut RenderWindow,
+        user_tex_src: Option<&mut dyn UserTexSource>,
+    ) {
+        draw(
+            window,
+            &self.ctx,
+            mem::take(&mut self.egui_result.1),
+            user_tex_src.unwrap_or(&mut DummyTexSource::default()),
+        )
+    }
+}
+
+fn draw(
     window: &mut RenderWindow,
     egui_ctx: &egui::CtxRef,
     shapes: Vec<egui::epaint::ClippedShape>,
-    user_tex_source: &mut TexSrc,
+    user_tex_source: &mut dyn UserTexSource,
 ) {
     let tex = get_new_texture(egui_ctx);
     window.set_active(true);

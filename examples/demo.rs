@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use egui::CtxRef;
 use egui_demo_lib::WrapApp;
-use egui_sfml::UserTexSource;
+use egui_sfml::SfEgui;
 use epi::backend;
 use epi::{App, IntegrationInfo, RepaintSignal, TextureAllocator};
 use sfml::{
@@ -31,14 +30,6 @@ impl TextureAllocator for TexAlloc {
     }
 }
 
-struct TexSrc {}
-
-impl UserTexSource for TexSrc {
-    fn get_texture(&mut self, _id: u64) -> (f32, f32, &sfml::graphics::Texture) {
-        todo!()
-    }
-}
-
 fn main() {
     let mut app = WrapApp::default();
     let vm = VideoMode::desktop_mode();
@@ -60,12 +51,10 @@ fn main() {
         tex_allocator: &mut ta,
     }
     .build();
-    let mut ctx_ref = CtxRef::default();
-    let mut tex_src = TexSrc {};
+    let mut sfegui = SfEgui::new(&rw);
     while rw.is_open() {
-        let mut raw_input = egui_sfml::make_raw_input(&rw);
         while let Some(ev) = rw.poll_event() {
-            egui_sfml::handle_event(&mut raw_input, &ev);
+            sfegui.add_event(&ev);
             match ev {
                 Event::Closed => {
                     rw.close();
@@ -81,11 +70,11 @@ fn main() {
                 _ => {}
             }
         }
-        ctx_ref.begin_frame(raw_input);
-        app.update(&ctx_ref, &mut frame);
+        sfegui.do_frame(|ctx| {
+            app.update(ctx, &mut frame);
+        });
         rw.clear(Color::BLACK);
-        let ef = ctx_ref.end_frame();
-        egui_sfml::draw(&mut rw, &ctx_ref, ef.1, &mut tex_src);
+        sfegui.draw(&mut rw, None);
         rw.display();
     }
 }
