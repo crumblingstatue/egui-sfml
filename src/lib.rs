@@ -273,6 +273,10 @@ impl SfEgui {
             user_tex_src.unwrap_or(&mut DummyTexSource::default()),
         )
     }
+    /// Returns a handle to the egui context
+    pub fn context(&self) -> CtxRef {
+        self.ctx.clone()
+    }
 }
 
 fn draw(
