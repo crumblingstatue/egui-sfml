@@ -174,14 +174,6 @@ fn egui_tex_to_rgba_vec(tex: &egui::Texture) -> Vec<u8> {
     vec
 }
 
-/// Do some initial setup
-pub fn setup(ctx: &mut egui::CtxRef, window: &mut RenderWindow) {
-    // We need to run an egui frame once before we can get the texture
-    let raw_input = make_raw_input(window);
-    ctx.begin_frame(raw_input);
-    let _ = ctx.end_frame();
-}
-
 /// Update the texture every frame with this
 pub fn get_new_texture(ctx: &egui::CtxRef) -> SfBox<Texture> {
     let egui_tex = ctx.texture();
@@ -226,10 +218,10 @@ pub trait UserTexSource {
 pub fn draw<TexSrc: UserTexSource>(
     window: &mut RenderWindow,
     egui_ctx: &egui::CtxRef,
-    tex: &Texture,
     shapes: Vec<egui::epaint::ClippedShape>,
     user_tex_source: &mut TexSrc,
 ) {
+    let tex = get_new_texture(egui_ctx);
     window.set_active(true);
     unsafe {
         glu_sys::glEnable(glu_sys::GL_SCISSOR_TEST);
@@ -238,7 +230,7 @@ pub fn draw<TexSrc: UserTexSource>(
     let (egui_tex_w, egui_tex_h) = (tex.size().x as f32, tex.size().y as f32);
     for egui::ClippedMesh(rect, mesh) in egui_ctx.tessellate(shapes) {
         let (tw, th, tex) = match mesh.texture_id {
-            TextureId::Egui => (egui_tex_w, egui_tex_h, tex),
+            TextureId::Egui => (egui_tex_w, egui_tex_h, &*tex),
             TextureId::User(id) => user_tex_source.get_texture(id),
         };
         for idx in mesh.indices {

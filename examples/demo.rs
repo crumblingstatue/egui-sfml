@@ -61,7 +61,6 @@ fn main() {
     }
     .build();
     let mut ctx_ref = CtxRef::default();
-    egui_sfml::setup(&mut ctx_ref, &mut rw);
     let mut tex_src = TexSrc {};
     while rw.is_open() {
         let mut raw_input = egui_sfml::make_raw_input(&rw);
@@ -82,12 +81,11 @@ fn main() {
                 _ => {}
             }
         }
-        let tex = egui_sfml::get_new_texture(&ctx_ref);
         ctx_ref.begin_frame(raw_input);
         app.update(&ctx_ref, &mut frame);
         rw.clear(Color::BLACK);
         let ef = ctx_ref.end_frame();
-        egui_sfml::draw(&mut rw, &ctx_ref, &tex, ef.1, &mut tex_src);
+        egui_sfml::draw(&mut rw, &ctx_ref, ef.1, &mut tex_src);
         rw.display();
     }
 }
