@@ -5,8 +5,9 @@
 #![warn(missing_docs)]
 
 use egui::{Event as EguiEv, Modifiers, PointerButton, Pos2, RawInput, TextureId};
+use sfml::graphics::blend_mode::Factor;
 use sfml::graphics::{
-    Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
+    BlendMode, Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
 };
 use sfml::{
     window::{mouse, Event, Key},
@@ -250,6 +251,13 @@ pub fn draw<TexSrc: UserTexSource>(
             vertices.push(sf_v);
         }
         let mut rs = RenderStates::default();
+        rs.set_blend_mode(BlendMode {
+            color_src_factor: Factor::One,
+            color_dst_factor: Factor::OneMinusSrcAlpha,
+            alpha_src_factor: Factor::OneMinusDstAlpha,
+            alpha_dst_factor: Factor::One,
+            ..Default::default()
+        });
         rs.set_texture(Some(tex));
         let pixels_per_point = 1.;
         let win_size = window.size();
