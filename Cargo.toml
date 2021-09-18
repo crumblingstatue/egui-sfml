@@ -11,3 +11,7 @@ egui = "0.14.0"
 git = "https://github.com/jeremyletang/rust-sfml.git"
 default-features = false
 features = ["graphics"]
+
+[dev-dependencies]
+egui_demo_lib = "0.14.0"
+epi = "0.14.0"
