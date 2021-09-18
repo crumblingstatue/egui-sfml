@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 egui = "0.14.0"
+glu-sys = "0.1.4"
 
 [dependencies.sfml]
 git = "https://github.com/jeremyletang/rust-sfml.git"

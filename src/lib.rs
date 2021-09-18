@@ -173,15 +173,12 @@ fn egui_tex_to_rgba_vec(tex: &egui::Texture) -> Vec<u8> {
     vec
 }
 
-/// Creates the egui texture that contains the font, etc.
-///
-/// Must create the texture with this first, as we need to do some egui setup
-pub fn get_first_texture(ctx: &mut egui::CtxRef, window: &RenderWindow) -> SfBox<Texture> {
+/// Do some initial setup
+pub fn setup(ctx: &mut egui::CtxRef, window: &mut RenderWindow) {
     // We need to run an egui frame once before we can get the texture
     let raw_input = make_raw_input(window);
     ctx.begin_frame(raw_input);
     let _ = ctx.end_frame();
-    get_new_texture(ctx)
 }
 
 /// Update the texture every frame with this
@@ -232,9 +229,13 @@ pub fn draw<TexSrc: UserTexSource>(
     shapes: Vec<egui::epaint::ClippedShape>,
     user_tex_source: &mut TexSrc,
 ) {
+    window.set_active(true);
+    unsafe {
+        glu_sys::glEnable(glu_sys::GL_SCISSOR_TEST);
+    }
     let mut vertices = Vec::new();
     let (egui_tex_w, egui_tex_h) = (tex.size().x as f32, tex.size().y as f32);
-    for egui::ClippedMesh(_rect, mesh) in egui_ctx.tessellate(shapes) {
+    for egui::ClippedMesh(rect, mesh) in egui_ctx.tessellate(shapes) {
         let (tw, th, tex) = match mesh.texture_id {
             TextureId::Egui => (egui_tex_w, egui_tex_h, tex),
             TextureId::User(id) => user_tex_source.get_texture(id),
@@ -250,7 +251,40 @@ pub fn draw<TexSrc: UserTexSource>(
         }
         let mut rs = RenderStates::default();
         rs.set_texture(Some(tex));
+        let pixels_per_point = 1.;
+        let win_size = window.size();
+        let width_in_pixels = win_size.x;
+        let height_in_pixels = win_size.y;
+        // Code copied from egui_glium (https://github.com/emilk/egui)
+        // Transform clip rect to physical pixels:
+        let clip_min_x = pixels_per_point * rect.min.x;
+        let clip_min_y = pixels_per_point * rect.min.y;
+        let clip_max_x = pixels_per_point * rect.max.x;
+        let clip_max_y = pixels_per_point * rect.max.y;
+
+        // Make sure clip rect can fit within a `u32`:
+        let clip_min_x = clip_min_x.clamp(0.0, width_in_pixels as f32);
+        let clip_min_y = clip_min_y.clamp(0.0, height_in_pixels as f32);
+        let clip_max_x = clip_max_x.clamp(clip_min_x, width_in_pixels as f32);
+        let clip_max_y = clip_max_y.clamp(clip_min_y, height_in_pixels as f32);
+
+        let clip_min_x = clip_min_x.round() as u32;
+        let clip_min_y = clip_min_y.round() as u32;
+        let clip_max_x = clip_max_x.round() as u32;
+        let clip_max_y = clip_max_y.round() as u32;
+        unsafe {
+            glu_sys::glScissor(
+                clip_min_x as _,
+                (height_in_pixels - clip_max_y) as _,
+                (clip_max_x - clip_min_x) as _,
+                (clip_max_y - clip_min_y) as _,
+            );
+        }
         window.draw_primitives(&vertices, PrimitiveType::TRIANGLES, &rs);
         vertices.clear();
     }
+    unsafe {
+        glu_sys::glDisable(glu_sys::GL_SCISSOR_TEST);
+    }
+    window.set_active(false);
 }

@@ -61,7 +61,7 @@ fn main() {
     }
     .build();
     let mut ctx_ref = CtxRef::default();
-    egui_sfml::get_first_texture(&mut ctx_ref, &rw);
+    egui_sfml::setup(&mut ctx_ref, &mut rw);
     let mut tex_src = TexSrc {};
     while rw.is_open() {
         let mut raw_input = egui_sfml::make_raw_input(&rw);
