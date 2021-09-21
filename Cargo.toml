@@ -5,7 +5,7 @@ authors = ["crumblingstatue <radiantstatue@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-egui = "0.14.0"
+egui = { git = "https://github.com/emilk/egui.git" }
 glu-sys = "0.1.4"
 
 [dependencies.sfml]
@@ -14,5 +14,5 @@ default-features = false
 features = ["graphics"]
 
 [dev-dependencies]
-egui_demo_lib = "0.14.0"
-epi = "0.14.0"
+egui_demo_lib = { git = "https://github.com/emilk/egui.git" }
+epi = { git = "https://github.com/emilk/egui.git" }
