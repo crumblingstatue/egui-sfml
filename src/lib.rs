@@ -12,6 +12,7 @@ use sfml::graphics::blend_mode::Factor;
 use sfml::graphics::{
     BlendMode, Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
 };
+use sfml::window::clipboard;
 use sfml::{
     window::{mouse, Event, Key},
     SfBox,
@@ -104,6 +105,16 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
             shift,
             system: _,
         } => {
+            if ctrl {
+                match code {
+                    Key::V => raw_input
+                        .events
+                        .push(egui::Event::Text(clipboard::get_string().to_rust_string())),
+                    Key::C => raw_input.events.push(egui::Event::Copy),
+                    Key::X => raw_input.events.push(egui::Event::Cut),
+                    _ => {}
+                }
+            }
             if let Some(key) = key_conv(code) {
                 raw_input.events.push(egui::Event::Key {
                     key,
@@ -258,6 +269,10 @@ impl SfEgui {
         self.ctx.begin_frame(self.raw_input.take());
         f(&self.ctx);
         self.egui_result = self.ctx.end_frame();
+        let clip_str = &self.egui_result.0.copied_text;
+        if !clip_str.is_empty() {
+            clipboard::set_string(clip_str);
+        }
     }
     /// Draw the ui to a `RenderWindow`.
     ///
