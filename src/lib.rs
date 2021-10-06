@@ -180,9 +180,10 @@ fn egui_tex_to_rgba_vec(tex: &egui::Texture) -> Vec<u8> {
 fn get_new_texture(ctx: &egui::CtxRef) -> SfBox<Texture> {
     let egui_tex = ctx.texture();
     let mut tex = Texture::new().unwrap();
-    if !tex.create(egui_tex.width as u32, egui_tex.height as u32) {
-        panic!("Failed to create texture");
-    }
+    assert!(
+        tex.create(egui_tex.width as u32, egui_tex.height as u32),
+        "Failed to create texture"
+    );
     let tex_pixels = egui_tex_to_rgba_vec(&egui_tex);
     unsafe {
         tex.update_from_pixels(
