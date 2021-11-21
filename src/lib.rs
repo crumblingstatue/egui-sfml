@@ -266,9 +266,7 @@ impl SfEgui {
     ///
     /// The `f` parameter is a user supplied ui function that does the desired ui
     pub fn do_frame(&mut self, f: impl FnOnce(&CtxRef)) {
-        self.ctx.begin_frame(self.raw_input.take());
-        f(&self.ctx);
-        self.egui_result = self.ctx.end_frame();
+        self.egui_result = self.ctx.run(self.raw_input.take(), f);
         let clip_str = &self.egui_result.0.copied_text;
         if !clip_str.is_empty() {
             clipboard::set_string(clip_str);

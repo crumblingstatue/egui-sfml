@@ -42,9 +42,9 @@ fn main() {
         info: IntegrationInfo {
             cpu_usage: None,
             native_pixels_per_point: None,
-            seconds_since_midnight: None,
             prefer_dark_mode: None,
             web_info: None,
+            name: "egui-sfml",
         },
         output: &mut app_out,
         repaint_signal: Arc::new(RepaintSig {}),
