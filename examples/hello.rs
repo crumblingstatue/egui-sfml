@@ -1,4 +1,4 @@
-use egui::{CtxRef, Window};
+use egui_sfml::egui::{CtxRef, Window};
 use egui_sfml::SfEgui;
 use sfml::{
     graphics::{Color, RenderTarget, RenderWindow},

@@ -18,6 +18,12 @@ use sfml::{
     SfBox,
 };
 
+/// Re-export of egui. Use this to access egui functionality.
+///
+/// This way, you don't have to declare egui as a dependency, and this will be
+/// guaranteed to be the same version as egui-sfml uses.
+pub use egui;
+
 fn button_conv(button: mouse::Button) -> PointerButton {
     match button {
         mouse::Button::Left => PointerButton::Primary,
