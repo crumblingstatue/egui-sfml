@@ -7,7 +7,7 @@
 use std::mem;
 
 use egui::epaint::ClippedShape;
-use egui::{CtxRef, Event as EguiEv, Modifiers, Output, PointerButton, Pos2, RawInput, TextureId};
+use egui::{Context, Event as EguiEv, Modifiers, Output, PointerButton, Pos2, RawInput, TextureId};
 use sfml::graphics::blend_mode::Factor;
 use sfml::graphics::{
     BlendMode, Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
@@ -182,7 +182,7 @@ fn make_raw_input(window: &RenderWindow) -> RawInput {
     }
 }
 
-fn egui_tex_to_rgba_vec(tex: &egui::Texture) -> Vec<u8> {
+fn fontimage_to_rgba_vec(tex: &egui::FontImage) -> Vec<u8> {
     let srgba = tex.srgba_pixels(1.0);
     let mut vec = Vec::new();
     for c in srgba {
@@ -191,19 +191,19 @@ fn egui_tex_to_rgba_vec(tex: &egui::Texture) -> Vec<u8> {
     vec
 }
 
-fn get_new_texture(ctx: &egui::CtxRef) -> SfBox<Texture> {
-    let egui_tex = ctx.texture();
+fn get_new_texture(ctx: &egui::Context) -> SfBox<Texture> {
+    let fontimage = ctx.font_image();
     let mut tex = Texture::new().unwrap();
     assert!(
-        tex.create(egui_tex.width as u32, egui_tex.height as u32),
+        tex.create(fontimage.width as u32, fontimage.height as u32),
         "Failed to create texture"
     );
-    let tex_pixels = egui_tex_to_rgba_vec(&egui_tex);
+    let tex_pixels = fontimage_to_rgba_vec(&fontimage);
     unsafe {
         tex.update_from_pixels(
             &tex_pixels,
-            egui_tex.width as u32,
-            egui_tex.height as u32,
+            fontimage.width as u32,
+            fontimage.height as u32,
             0,
             0,
         );
@@ -243,7 +243,7 @@ impl UserTexSource for DummyTexSource {
 
 /// `Egui` integration for SFML.
 pub struct SfEgui {
-    ctx: CtxRef,
+    ctx: Context,
     raw_input: RawInput,
     egui_result: (Output, Vec<ClippedShape>),
 }
@@ -255,7 +255,7 @@ impl SfEgui {
     pub fn new(window: &RenderWindow) -> Self {
         Self {
             raw_input: make_raw_input(window),
-            ctx: CtxRef::default(),
+            ctx: Context::default(),
             egui_result: Default::default(),
         }
     }
@@ -268,7 +268,7 @@ impl SfEgui {
     /// Does an egui frame with a user supplied ui function.
     ///
     /// The `f` parameter is a user supplied ui function that does the desired ui
-    pub fn do_frame(&mut self, f: impl FnOnce(&CtxRef)) {
+    pub fn do_frame(&mut self, f: impl FnOnce(&Context)) {
         self.egui_result = self.ctx.run(self.raw_input.take(), f);
         let clip_str = &self.egui_result.0.copied_text;
         if !clip_str.is_empty() {
@@ -294,14 +294,14 @@ impl SfEgui {
     ///
     /// `CtxRef` can be cloned, but beware that it will be outdated after a call to
     /// [`do_frame`](Self::do_frame)
-    pub fn context(&self) -> &CtxRef {
+    pub fn context(&self) -> &Context {
         &self.ctx
     }
 }
 
 fn draw(
     window: &mut RenderWindow,
-    egui_ctx: &egui::CtxRef,
+    egui_ctx: &egui::Context,
     shapes: Vec<egui::epaint::ClippedShape>,
     user_tex_source: &mut dyn UserTexSource,
 ) {

@@ -1,11 +1,11 @@
-use egui_sfml::egui::{CtxRef, Window};
+use egui_sfml::egui::{Context, Window};
 use egui_sfml::SfEgui;
 use sfml::{
     graphics::{Color, RenderTarget, RenderWindow},
     window::{ContextSettings, Event, Style},
 };
 
-fn ui(ctx: &CtxRef) {
+fn ui(ctx: &Context) {
     let win = Window::new("Hello egui-sfml!");
     win.show(ctx, |ui| {
         ui.label("Hello world!");
