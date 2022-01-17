@@ -182,8 +182,8 @@ fn make_raw_input(window: &RenderWindow) -> RawInput {
     }
 }
 
-fn fontimage_to_rgba_vec(tex: &egui::FontImage) -> Vec<u8> {
-    let srgba = tex.srgba_pixels(1.0);
+fn fontimage_to_rgba_vec(tex: &egui::epaint::FontImage) -> Vec<u8> {
+    let srgba = tex.image.srgba_pixels(1.0);
     let mut vec = Vec::new();
     for c in srgba {
         vec.extend_from_slice(&c.to_array());
@@ -192,18 +192,21 @@ fn fontimage_to_rgba_vec(tex: &egui::FontImage) -> Vec<u8> {
 }
 
 fn get_new_texture(ctx: &egui::Context) -> SfBox<Texture> {
-    let fontimage = ctx.font_image();
+    let fontimage = ctx.fonts().font_image();
     let mut tex = Texture::new().unwrap();
     assert!(
-        tex.create(fontimage.width as u32, fontimage.height as u32),
+        tex.create(
+            fontimage.image.width() as u32,
+            fontimage.image.height() as u32
+        ),
         "Failed to create texture"
     );
     let tex_pixels = fontimage_to_rgba_vec(&fontimage);
     unsafe {
         tex.update_from_pixels(
             &tex_pixels,
-            fontimage.width as u32,
-            fontimage.height as u32,
+            fontimage.image.width() as u32,
+            fontimage.image.height() as u32,
             0,
             0,
         );
@@ -314,7 +317,8 @@ fn draw(
     let (egui_tex_w, egui_tex_h) = (tex.size().x as f32, tex.size().y as f32);
     for egui::ClippedMesh(rect, mesh) in egui_ctx.tessellate(shapes) {
         let (tw, th, tex) = match mesh.texture_id {
-            TextureId::Egui => (egui_tex_w, egui_tex_h, &*tex),
+            TextureId::Managed(0) => (egui_tex_w, egui_tex_h, &*tex),
+            TextureId::Managed(_) => (egui_tex_w, egui_tex_h, &*tex), // TODO: implement multiple managed textures
             TextureId::User(id) => user_tex_source.get_texture(id),
         };
         for idx in mesh.indices {
