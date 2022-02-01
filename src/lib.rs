@@ -4,10 +4,14 @@
 
 #![warn(missing_docs)]
 
+use std::collections::HashMap;
 use std::mem;
 
 use egui::epaint::ClippedShape;
-use egui::{Context, Event as EguiEv, Modifiers, Output, PointerButton, Pos2, RawInput, TextureId};
+use egui::{
+    Context, Event as EguiEv, ImageData, Modifiers, Output, PointerButton, Pos2, RawInput,
+    TextureId,
+};
 use sfml::graphics::blend_mode::Factor;
 use sfml::graphics::{
     BlendMode, Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
@@ -189,38 +193,6 @@ fn make_raw_input(window: &RenderWindow) -> RawInput {
     }
 }
 
-fn fontimage_to_rgba_vec(tex: &egui::epaint::FontImage) -> Vec<u8> {
-    let srgba = tex.image.srgba_pixels(1.0);
-    let mut vec = Vec::new();
-    for c in srgba {
-        vec.extend_from_slice(&c.to_array());
-    }
-    vec
-}
-
-fn get_new_texture(ctx: &egui::Context) -> SfBox<Texture> {
-    let fontimage = ctx.fonts().font_image();
-    let mut tex = Texture::new().unwrap();
-    assert!(
-        tex.create(
-            fontimage.image.width() as u32,
-            fontimage.image.height() as u32
-        ),
-        "Failed to create texture"
-    );
-    let tex_pixels = fontimage_to_rgba_vec(&fontimage);
-    unsafe {
-        tex.update_from_pixels(
-            &tex_pixels,
-            fontimage.image.width() as u32,
-            fontimage.image.height() as u32,
-            0,
-            0,
-        );
-    }
-    tex
-}
-
 /// A source for egui user textures.
 ///
 /// You can create a struct that contains all the necessary information to get a user texture from
@@ -256,6 +228,7 @@ pub struct SfEgui {
     ctx: Context,
     raw_input: RawInput,
     egui_result: (Output, Vec<ClippedShape>),
+    textures: HashMap<TextureId, SfBox<Texture>>,
 }
 
 impl SfEgui {
@@ -267,6 +240,7 @@ impl SfEgui {
             raw_input: make_raw_input(window),
             ctx: Context::default(),
             egui_result: Default::default(),
+            textures: HashMap::default(),
         }
     }
     /// Convert an SFML event into an egui event and add it for later use by egui.
@@ -284,6 +258,17 @@ impl SfEgui {
         if !clip_str.is_empty() {
             clipboard::set_string(clip_str);
         }
+        for (id, delta) in &self.egui_result.0.textures_delta.set {
+            let [w, h] = delta.image.size();
+            let tex = self.textures.entry(*id).or_insert_with(|| {
+                let mut tex = Texture::new().unwrap();
+                if !tex.create(w as u32, h as u32) {
+                    panic!();
+                }
+                tex
+            });
+            update_tex_from_delta(tex, delta);
+        }
     }
     /// Draw the ui to a `RenderWindow`.
     ///
@@ -298,6 +283,7 @@ impl SfEgui {
             &self.ctx,
             mem::take(&mut self.egui_result.1),
             user_tex_src.unwrap_or(&mut DummyTexSource::default()),
+            &self.textures,
         )
     }
     /// Returns a handle to the egui context
@@ -309,23 +295,52 @@ impl SfEgui {
     }
 }
 
+fn update_tex_from_delta(tex: &mut SfBox<Texture>, delta: &egui::epaint::ImageDelta) {
+    let mut x = 0;
+    let mut y = 0;
+    let [w, h] = delta.image.size();
+    if let Some([xx, yy]) = delta.pos {
+        x = xx as u32;
+        y = yy as u32;
+    }
+    match &delta.image {
+        ImageData::Color(color) => {
+            let srgba: Vec<u8> = color.pixels.iter().flat_map(|c32| c32.to_array()).collect();
+            unsafe {
+                tex.update_from_pixels(&srgba, w as u32, h as u32, x, y);
+            }
+        }
+        ImageData::Alpha(alpha) => {
+            let srgba: Vec<u8> = alpha
+                .srgba_pixels(1.0)
+                .flat_map(|c32| c32.to_array())
+                .collect();
+            unsafe {
+                tex.update_from_pixels(&srgba, w as u32, h as u32, x, y);
+            }
+        }
+    }
+}
+
 fn draw(
     window: &mut RenderWindow,
     egui_ctx: &egui::Context,
     shapes: Vec<egui::epaint::ClippedShape>,
     user_tex_source: &mut dyn UserTexSource,
+    textures: &HashMap<TextureId, SfBox<Texture>>,
 ) {
-    let tex = get_new_texture(egui_ctx);
     window.set_active(true);
     unsafe {
         glu_sys::glEnable(glu_sys::GL_SCISSOR_TEST);
     }
     let mut vertices = Vec::new();
-    let (egui_tex_w, egui_tex_h) = (tex.size().x as f32, tex.size().y as f32);
     for egui::ClippedMesh(rect, mesh) in egui_ctx.tessellate(shapes) {
         let (tw, th, tex) = match mesh.texture_id {
-            TextureId::Managed(0) => (egui_tex_w, egui_tex_h, &*tex),
-            TextureId::Managed(_) => (egui_tex_w, egui_tex_h, &*tex), // TODO: implement multiple managed textures
+            TextureId::Managed(id) => {
+                let tex = &*textures[&TextureId::Managed(id)];
+                let (egui_tex_w, egui_tex_h) = (tex.size().x as f32, tex.size().y as f32);
+                (egui_tex_w, egui_tex_h, &*tex)
+            }
             TextureId::User(id) => user_tex_source.get_texture(id),
         };
         for idx in mesh.indices {
