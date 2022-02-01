@@ -167,6 +167,13 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
                 raw_input.events.push(EguiEv::Text(unicode.to_string()));
             }
         }
+        Event::MouseWheelScrolled { delta, .. } => {
+            if sfml::window::Key::LControl.is_pressed() {
+                raw_input
+                    .events
+                    .push(EguiEv::Zoom(if delta > 0.0 { 1.1 } else { 0.9 }));
+            }
+        }
         _ => {}
     }
 }
