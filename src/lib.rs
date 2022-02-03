@@ -353,13 +353,13 @@ fn draw(
             vertices.push(sf_v);
         }
         let mut rs = RenderStates::default();
-        rs.set_blend_mode(BlendMode {
+        rs.blend_mode = BlendMode {
             color_src_factor: Factor::One,
             color_dst_factor: Factor::OneMinusSrcAlpha,
             alpha_src_factor: Factor::OneMinusDstAlpha,
             alpha_dst_factor: Factor::One,
             ..Default::default()
-        });
+        };
         rs.set_texture(Some(tex));
         let pixels_per_point = 1.;
         let win_size = window.size();
