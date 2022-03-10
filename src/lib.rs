@@ -7,9 +7,8 @@
 use std::collections::HashMap;
 use std::mem;
 
-use egui::epaint::ClippedShape;
 use egui::{
-    Context, Event as EguiEv, ImageData, Modifiers, Output, PointerButton, Pos2, RawInput,
+    Context, Event as EguiEv, FullOutput, ImageData, Modifiers, PointerButton, Pos2, RawInput,
     TextureId,
 };
 use sfml::graphics::blend_mode::Factor;
@@ -227,7 +226,7 @@ impl UserTexSource for DummyTexSource {
 pub struct SfEgui {
     ctx: Context,
     raw_input: RawInput,
-    egui_result: (Output, Vec<ClippedShape>),
+    egui_result: FullOutput,
     textures: HashMap<TextureId, SfBox<Texture>>,
 }
 
@@ -254,11 +253,11 @@ impl SfEgui {
     /// The `f` parameter is a user supplied ui function that does the desired ui
     pub fn do_frame(&mut self, f: impl FnOnce(&Context)) {
         self.egui_result = self.ctx.run(self.raw_input.take(), f);
-        let clip_str = &self.egui_result.0.copied_text;
+        let clip_str = &self.egui_result.platform_output.copied_text;
         if !clip_str.is_empty() {
             clipboard::set_string(clip_str);
         }
-        for (id, delta) in &self.egui_result.0.textures_delta.set {
+        for (id, delta) in &self.egui_result.textures_delta.set {
             let [w, h] = delta.image.size();
             let tex = self.textures.entry(*id).or_insert_with(|| {
                 let mut tex = Texture::new().unwrap();
@@ -281,7 +280,7 @@ impl SfEgui {
         draw(
             window,
             &self.ctx,
-            mem::take(&mut self.egui_result.1),
+            mem::take(&mut self.egui_result.shapes),
             user_tex_src.unwrap_or(&mut DummyTexSource::default()),
             &self.textures,
         )
