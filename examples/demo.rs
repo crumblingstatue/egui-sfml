@@ -1,21 +1,14 @@
-use std::sync::{Arc, Mutex};
+#![feature(new_uninit)]
+
+use std::rc::Rc;
 
 use egui_demo_lib::WrapApp;
 use egui_sfml::SfEgui;
-use epi::{
-    backend::{self, FrameData, RepaintSignal},
-    App, IntegrationInfo,
-};
+use epi::{backend, App, IntegrationInfo};
 use sfml::{
     graphics::{Color, Rect, RenderTarget, RenderWindow, View},
     window::{Event, Style, VideoMode},
 };
-
-struct RepaintSig {}
-
-impl RepaintSignal for RepaintSig {
-    fn request_repaint(&self) {}
-}
 
 fn main() {
     let mut app = WrapApp::default();
@@ -23,7 +16,7 @@ fn main() {
     let mut rw = RenderWindow::new(vm, "Egui test", Style::NONE, &Default::default());
     rw.set_position((0, 0).into());
     rw.set_vertical_sync_enabled(true);
-    let data = FrameData {
+    let mut frame = epi::Frame {
         info: IntegrationInfo {
             cpu_usage: None,
             native_pixels_per_point: None,
@@ -32,9 +25,12 @@ fn main() {
             name: "egui-sfml",
         },
         output: backend::AppOutput::default(),
-        repaint_signal: Arc::new(RepaintSig {}),
+        storage: None,
+        gl: unsafe {
+            eprintln!("TODO: Fucked up workaround");
+            Rc::new_uninit().assume_init()
+        },
     };
-    let frame = epi::Frame(Arc::new(Mutex::new(data)));
     let mut sfegui = SfEgui::new(&rw);
     while rw.is_open() {
         while let Some(ev) = rw.poll_event() {
@@ -55,7 +51,7 @@ fn main() {
             }
         }
         sfegui.do_frame(|ctx| {
-            app.update(ctx, &frame);
+            app.update(ctx, &mut frame);
         });
         rw.clear(Color::BLACK);
         sfegui.draw(&mut rw, None);

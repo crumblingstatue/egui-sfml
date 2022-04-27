@@ -3,10 +3,12 @@
 //! Contains various types and functions that helps with integrating egui with SFML.
 
 #![warn(missing_docs)]
+#![feature(let_else)]
 
 use std::collections::HashMap;
 use std::mem;
 
+use egui::epaint::Primitive;
 use egui::{
     Context, Event as EguiEv, FullOutput, ImageData, Modifiers, PointerButton, Pos2, RawInput,
     TextureId,
@@ -309,8 +311,8 @@ fn update_tex_from_delta(tex: &mut SfBox<Texture>, delta: &egui::epaint::ImageDe
                 tex.update_from_pixels(&srgba, w as u32, h as u32, x, y);
             }
         }
-        ImageData::Alpha(alpha) => {
-            let srgba: Vec<u8> = alpha
+        ImageData::Font(font_image) => {
+            let srgba: Vec<u8> = font_image
                 .srgba_pixels(1.0)
                 .flat_map(|c32| c32.to_array())
                 .collect();
@@ -333,7 +335,12 @@ fn draw(
         glu_sys::glEnable(glu_sys::GL_SCISSOR_TEST);
     }
     let mut vertices = Vec::new();
-    for egui::ClippedMesh(rect, mesh) in egui_ctx.tessellate(shapes) {
+    for egui::ClippedPrimitive {
+        clip_rect,
+        primitive,
+    } in egui_ctx.tessellate(shapes)
+    {
+        let Primitive::Mesh(mesh) = primitive else { continue };
         let (tw, th, tex) = match mesh.texture_id {
             TextureId::Managed(id) => {
                 let tex = &*textures[&TextureId::Managed(id)];
@@ -366,10 +373,10 @@ fn draw(
         let height_in_pixels = win_size.y;
         // Code copied from egui_glium (https://github.com/emilk/egui)
         // Transform clip rect to physical pixels:
-        let clip_min_x = pixels_per_point * rect.min.x;
-        let clip_min_y = pixels_per_point * rect.min.y;
-        let clip_max_x = pixels_per_point * rect.max.x;
-        let clip_max_y = pixels_per_point * rect.max.y;
+        let clip_min_x = pixels_per_point * clip_rect.min.x;
+        let clip_min_y = pixels_per_point * clip_rect.min.y;
+        let clip_max_x = pixels_per_point * clip_rect.max.x;
+        let clip_max_y = pixels_per_point * clip_rect.max.y;
 
         // Make sure clip rect can fit within a `u32`:
         let clip_min_x = clip_min_x.clamp(0.0, width_in_pixels as f32);
