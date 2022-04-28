@@ -15,4 +15,3 @@ features = ["graphics"]
 
 [dev-dependencies]
 egui_demo_lib = { git = "https://github.com/emilk/egui.git" }
-epi = { git = "https://github.com/emilk/egui.git" }
