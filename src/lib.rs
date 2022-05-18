@@ -316,6 +316,13 @@ fn update_tex_from_delta(tex: &mut SfBox<Texture>, delta: &egui::epaint::ImageDe
                 .srgba_pixels(1.0)
                 .flat_map(|c32| c32.to_array())
                 .collect();
+            if w > tex.size().x as usize || h > tex.size().y as usize {
+                // Resize texture
+                let ok = tex.create(w as u32, h as u32);
+                if !ok {
+                    panic!("Failed to resize texture");
+                }
+            }
             unsafe {
                 tex.update_from_pixels(&srgba, w as u32, h as u32, x, y);
             }
