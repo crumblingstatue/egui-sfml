@@ -17,6 +17,7 @@ use sfml::graphics::blend_mode::Factor;
 use sfml::graphics::{
     BlendMode, Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
 };
+use sfml::system::Vector2;
 use sfml::window::clipboard;
 use sfml::{
     window::{mouse, Event, Key},
@@ -179,18 +180,26 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
                     .push(EguiEv::Zoom(if delta > 0.0 { 1.1 } else { 0.9 }));
             }
         }
+        Event::Resized { width, height } => {
+            raw_input.screen_rect = Some(raw_input_screen_rect(width, height));
+        }
         _ => {}
     }
 }
 
 /// Creates a `RawInput` that fits the window.
 fn make_raw_input(window: &RenderWindow) -> RawInput {
+    let Vector2 { x: w, y: h } = window.size();
     RawInput {
-        screen_rect: Some(egui::Rect {
-            min: Pos2::new(0., 0.),
-            max: Pos2::new(window.size().x as f32, window.size().y as f32),
-        }),
+        screen_rect: Some(raw_input_screen_rect(w, h)),
         ..Default::default()
+    }
+}
+
+fn raw_input_screen_rect(w: u32, h: u32) -> egui::Rect {
+    egui::Rect {
+        min: Pos2::new(0., 0.),
+        max: Pos2::new(w as f32, h as f32),
     }
 }
 
