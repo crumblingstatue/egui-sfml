@@ -352,7 +352,7 @@ fn draw(
             TextureId::Managed(id) => {
                 let tex = &*textures[&TextureId::Managed(id)];
                 let (egui_tex_w, egui_tex_h) = (tex.size().x as f32, tex.size().y as f32);
-                (egui_tex_w, egui_tex_h, &*tex)
+                (egui_tex_w, egui_tex_h, tex)
             }
             TextureId::User(id) => user_tex_source.get_texture(id),
         };
