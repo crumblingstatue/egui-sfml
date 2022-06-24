@@ -90,6 +90,18 @@ fn key_conv(code: Key) -> Option<egui::Key> {
         Key::X => EKey::X,
         Key::Y => EKey::Y,
         Key::Z => EKey::Z,
+        Key::F1 => EKey::F1,
+        Key::F2 => EKey::F2,
+        Key::F3 => EKey::F3,
+        Key::F4 => EKey::F4,
+        Key::F5 => EKey::F5,
+        Key::F6 => EKey::F6,
+        Key::F7 => EKey::F7,
+        Key::F8 => EKey::F8,
+        Key::F9 => EKey::F9,
+        Key::F10 => EKey::F10,
+        Key::F11 => EKey::F11,
+        Key::F12 => EKey::F12,
         _ => return None,
     })
 }
