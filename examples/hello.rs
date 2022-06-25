@@ -8,6 +8,7 @@ use sfml::{
 fn ui(ctx: &Context) {
     let win = Window::new("Hello egui-sfml!");
     win.show(ctx, |ui| {
+        ui.label(format!("{:#?}", ctx.input().modifiers));
         ui.label("Hello world!");
         let _ = ui.button("Click me!");
     });

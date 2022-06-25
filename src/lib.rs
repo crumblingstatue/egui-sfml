@@ -275,6 +275,11 @@ impl SfEgui {
     ///
     /// The `f` parameter is a user supplied ui function that does the desired ui
     pub fn do_frame(&mut self, f: impl FnOnce(&Context)) {
+        // Update modifiers every frame, otherwise querying them (input.modifiers.*) doesn't seem
+        // up-to-date
+        self.raw_input.modifiers.alt = Key::LAlt.is_pressed() || Key::RAlt.is_pressed();
+        self.raw_input.modifiers.ctrl = Key::LControl.is_pressed() || Key::RControl.is_pressed();
+        self.raw_input.modifiers.shift = Key::LShift.is_pressed() || Key::RShift.is_pressed();
         self.egui_result = self.ctx.run(self.raw_input.take(), f);
         let clip_str = &self.egui_result.platform_output.copied_text;
         if !clip_str.is_empty() {
