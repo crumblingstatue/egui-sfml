@@ -1,4 +1,4 @@
-use egui_demo_lib::DemoWindows;
+use egui_demo_lib::{DemoWindows, easy_mark};
 use egui_sfml::SfEgui;
 use sfml::{
     graphics::{Color, Rect, RenderTarget, RenderWindow, View},
@@ -32,6 +32,9 @@ fn main() {
         }
         sfegui.do_frame(|ctx| {
             demo.ui(ctx);
+            egui::Window::new("EasyMark").show(ctx, |ui| {
+                easy_mark::easy_mark(ui, include_str!("../README.md"));
+            });
         });
         rw.clear(Color::BLACK);
         sfegui.draw(&mut rw, None);
