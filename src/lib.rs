@@ -130,7 +130,7 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
                 match code {
                     Key::V => raw_input
                         .events
-                        .push(egui::Event::Text(clipboard::get_string().to_rust_string())),
+                        .push(egui::Event::Text(clipboard::get_string())),
                     Key::C => raw_input.events.push(egui::Event::Copy),
                     Key::X => raw_input.events.push(egui::Event::Cut),
                     _ => {}

@@ -1,4 +1,4 @@
-use egui_demo_lib::{DemoWindows, easy_mark};
+use egui_demo_lib::{easy_mark, DemoWindows};
 use egui_sfml::SfEgui;
 use sfml::{
     graphics::{Color, Rect, RenderTarget, RenderWindow, View},
