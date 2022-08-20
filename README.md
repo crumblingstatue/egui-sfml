@@ -1,5 +1,8 @@
 # egui-sfml
 
+[![Crates.io](https://img.shields.io/crates/v/egui-sfml)](https://crates.io/crates/egui-sfml)
+[![docs.rs](https://img.shields.io/docsrs/egui-sfml?style=plastic)](https://docs.rs/egui-sfml)
+
 [SFML](https://github.com/jeremyletang/rust-sfml) integration for [egui](https://github.com/emilk/egui).
 
 This library allows using egui for rust-sfml projects.
