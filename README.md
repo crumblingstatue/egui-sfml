@@ -1,6 +1,6 @@
 # egui-sfml
 
-SFML integration for egui.
+[SFML](https://github.com/jeremyletang/rust-sfml) integration for [egui](https://github.com/emilk/egui).
 
 This library allows using egui for rust-sfml projects.
 It's a very easy way to add a functional gui to your rust-sfml game or application!
