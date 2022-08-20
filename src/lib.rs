@@ -3,7 +3,6 @@
 //! Contains various types and functions that helps with integrating egui with SFML.
 
 #![warn(missing_docs)]
-#![feature(let_else)]
 
 use std::collections::HashMap;
 use std::mem;
@@ -373,7 +372,10 @@ fn draw(
         primitive,
     } in egui_ctx.tessellate(shapes)
     {
-        let Primitive::Mesh(mesh) = primitive else { continue };
+        let mesh = match primitive {
+            Primitive::Mesh(mesh) => mesh,
+            _ => continue,
+        };
         let (tw, th, tex) = match mesh.texture_id {
             TextureId::Managed(id) => {
                 let tex = &*textures[&TextureId::Managed(id)];
