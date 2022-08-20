@@ -1,18 +1,8 @@
-use egui_sfml::egui::{Context, Window};
-use egui_sfml::SfEgui;
+use egui_sfml::{egui, SfEgui};
 use sfml::{
     graphics::{Color, RenderTarget, RenderWindow},
     window::{ContextSettings, Event, Style},
 };
-
-fn ui(ctx: &Context) {
-    let win = Window::new("Hello egui-sfml!");
-    win.show(ctx, |ui| {
-        ui.label(format!("{:#?}", ctx.input().modifiers));
-        ui.label("Hello world!");
-        let _ = ui.button("Click me!");
-    });
-}
 
 fn main() {
     let mut rw = RenderWindow::new(
@@ -25,6 +15,9 @@ fn main() {
     // Step 1: Create an SfEgui
     let mut sfegui = SfEgui::new(&rw);
 
+    let mut name = String::new();
+    let mut msg = String::new();
+
     while rw.is_open() {
         while let Some(event) = rw.poll_event() {
             // Step 2: Collect events from the event loop
@@ -34,9 +27,24 @@ fn main() {
             }
         }
         // Step 3: Do an egui frame with the desired ui function
-        sfegui.do_frame(ui);
-        rw.clear(Color::BLACK);
+        sfegui.do_frame(|ctx| {
+            let win = egui::Window::new("Hello egui-sfml!");
+            win.show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label("Name");
+                    ui.text_edit_singleline(&mut name);
+                    if ui.button("Say hello").clicked() {
+                        msg = format!("Hello {}!", name);
+                    }
+                });
+                if !msg.is_empty() {
+                    ui.separator();
+                    ui.label(&msg);
+                }
+            });
+        });
         // Step 4: Draw
+        rw.clear(Color::rgb(95, 106, 62));
         sfegui.draw(&mut rw, None);
         rw.display();
     }
