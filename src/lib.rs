@@ -297,15 +297,15 @@ impl SfEgui {
                 Entry::Vacant(en) => {
                     let mut tex = Texture::new().unwrap();
                     if !tex.create(w as u32, h as u32) {
-                        return Err(DoFrameError::TextureCreateError {
+                        return Err(DoFrameError::TextureCreateError(TextureCreateError {
                             width: w,
                             height: h,
-                        });
+                        }));
                     }
                     en.insert(tex)
                 }
             };
-            update_tex_from_delta(tex, delta);
+            update_tex_from_delta(tex, delta)?;
         }
         Ok(())
     }
@@ -334,20 +334,33 @@ impl SfEgui {
     }
 }
 
+#[derive(Debug)]
+/// Error when failing to create a texture
+pub struct TextureCreateError {
+    /// The width of the requested texture
+    pub width: usize,
+    /// The height of the requested texture
+    pub height: usize,
+}
+
 /// Error that can happen when doing an egui frame
 #[non_exhaustive]
 #[derive(Debug)]
 pub enum DoFrameError {
     /// Failed to create a texture
-    TextureCreateError {
-        /// The width of the requested texture
-        width: usize,
-        /// The height of the requested texture
-        height: usize,
-    },
+    TextureCreateError(TextureCreateError),
 }
 
-fn update_tex_from_delta(tex: &mut SfBox<Texture>, delta: &egui::epaint::ImageDelta) {
+impl From<TextureCreateError> for DoFrameError {
+    fn from(src: TextureCreateError) -> Self {
+        Self::TextureCreateError(src)
+    }
+}
+
+fn update_tex_from_delta(
+    tex: &mut SfBox<Texture>,
+    delta: &egui::epaint::ImageDelta,
+) -> Result<(), TextureCreateError> {
     let mut x = 0;
     let mut y = 0;
     let [w, h] = delta.image.size();
@@ -371,7 +384,10 @@ fn update_tex_from_delta(tex: &mut SfBox<Texture>, delta: &egui::epaint::ImageDe
                 // Resize texture
                 let ok = tex.create(w as u32, h as u32);
                 if !ok {
-                    panic!("Failed to resize texture");
+                    return Err(TextureCreateError {
+                        width: w,
+                        height: h,
+                    });
                 }
             }
             unsafe {
@@ -379,6 +395,7 @@ fn update_tex_from_delta(tex: &mut SfBox<Texture>, delta: &egui::epaint::ImageDe
             }
         }
     }
+    Ok(())
 }
 
 fn draw(
