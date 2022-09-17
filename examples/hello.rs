@@ -27,22 +27,24 @@ fn main() {
             }
         }
         // Step 3: Do an egui frame with the desired ui function
-        sfegui.do_frame(|ctx| {
-            let win = egui::Window::new("Hello egui-sfml!");
-            win.show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    ui.label("Name");
-                    ui.text_edit_singleline(&mut name);
-                    if ui.button("Say hello").clicked() {
-                        msg = format!("Hello {}!", name);
+        sfegui
+            .do_frame(|ctx| {
+                let win = egui::Window::new("Hello egui-sfml!");
+                win.show(ctx, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label("Name");
+                        ui.text_edit_singleline(&mut name);
+                        if ui.button("Say hello").clicked() {
+                            msg = format!("Hello {}!", name);
+                        }
+                    });
+                    if !msg.is_empty() {
+                        ui.separator();
+                        ui.label(&msg);
                     }
                 });
-                if !msg.is_empty() {
-                    ui.separator();
-                    ui.label(&msg);
-                }
-            });
-        });
+            })
+            .unwrap();
         // Step 4: Draw
         rw.clear(Color::rgb(95, 106, 62));
         sfegui.draw(&mut rw, None);

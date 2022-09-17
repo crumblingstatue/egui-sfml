@@ -30,12 +30,14 @@ fn main() {
                 _ => {}
             }
         }
-        sfegui.do_frame(|ctx| {
-            demo.ui(ctx);
-            egui::Window::new("EasyMark").show(ctx, |ui| {
-                easy_mark::easy_mark(ui, include_str!("../README.md"));
-            });
-        });
+        sfegui
+            .do_frame(|ctx| {
+                demo.ui(ctx);
+                egui::Window::new("EasyMark").show(ctx, |ui| {
+                    easy_mark::easy_mark(ui, include_str!("../README.md"));
+                });
+            })
+            .unwrap();
         rw.clear(Color::BLACK);
         sfegui.draw(&mut rw, None);
         rw.display();

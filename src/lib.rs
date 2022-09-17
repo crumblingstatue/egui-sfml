@@ -4,6 +4,7 @@
 
 #![warn(missing_docs)]
 
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::mem;
 
@@ -278,7 +279,7 @@ impl SfEgui {
     /// Does an egui frame with a user supplied ui function.
     ///
     /// The `f` parameter is a user supplied ui function that does the desired ui
-    pub fn do_frame(&mut self, f: impl FnOnce(&Context)) {
+    pub fn do_frame(&mut self, f: impl FnOnce(&Context)) -> Result<(), DoFrameError> {
         // Update modifiers every frame, otherwise querying them (input.modifiers.*) doesn't seem
         // up-to-date
         self.raw_input.modifiers.alt = Key::LAlt.is_pressed() || Key::RAlt.is_pressed();
@@ -291,15 +292,22 @@ impl SfEgui {
         }
         for (id, delta) in &self.egui_result.textures_delta.set {
             let [w, h] = delta.image.size();
-            let tex = self.textures.entry(*id).or_insert_with(|| {
-                let mut tex = Texture::new().unwrap();
-                if !tex.create(w as u32, h as u32) {
-                    panic!();
+            let tex = match self.textures.entry(*id) {
+                Entry::Occupied(en) => en.into_mut(),
+                Entry::Vacant(en) => {
+                    let mut tex = Texture::new().unwrap();
+                    if !tex.create(w as u32, h as u32) {
+                        return Err(DoFrameError::TextureCreateError {
+                            width: w,
+                            height: h,
+                        });
+                    }
+                    en.insert(tex)
                 }
-                tex
-            });
+            };
             update_tex_from_delta(tex, delta);
         }
+        Ok(())
     }
     /// Draw the ui to a `RenderWindow`.
     ///
@@ -324,6 +332,19 @@ impl SfEgui {
     pub fn context(&self) -> &Context {
         &self.ctx
     }
+}
+
+/// Error that can happen when doing an egui frame
+#[non_exhaustive]
+#[derive(Debug)]
+pub enum DoFrameError {
+    /// Failed to create a texture
+    TextureCreateError {
+        /// The width of the requested texture
+        width: usize,
+        /// The height of the requested texture
+        height: usize,
+    },
 }
 
 fn update_tex_from_delta(tex: &mut SfBox<Texture>, delta: &egui::epaint::ImageDelta) {
