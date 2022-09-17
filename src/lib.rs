@@ -26,13 +26,14 @@ use sfml::{
 pub use egui;
 pub use sfml;
 
-fn button_conv(button: mouse::Button) -> PointerButton {
-    match button {
+fn button_conv(button: mouse::Button) -> Option<PointerButton> {
+    let but = match button {
         mouse::Button::Left => PointerButton::Primary,
         mouse::Button::Right => PointerButton::Secondary,
         mouse::Button::Middle => PointerButton::Middle,
-        _ => panic!("Unhandled pointer button: {:?}", button),
-    }
+        _ => return None,
+    };
+    Some(but)
 }
 
 fn key_conv(code: Key) -> Option<egui::Key> {
@@ -164,20 +165,24 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
                 .push(EguiEv::PointerMoved(Pos2::new(x as f32, y as f32)));
         }
         Event::MouseButtonPressed { x, y, button } => {
-            raw_input.events.push(EguiEv::PointerButton {
-                pos: Pos2::new(x as f32, y as f32),
-                button: button_conv(button),
-                pressed: true,
-                modifiers: Modifiers::default(),
-            });
+            if let Some(button) = button_conv(button) {
+                raw_input.events.push(EguiEv::PointerButton {
+                    pos: Pos2::new(x as f32, y as f32),
+                    button,
+                    pressed: true,
+                    modifiers: Modifiers::default(),
+                });
+            }
         }
         Event::MouseButtonReleased { x, y, button } => {
-            raw_input.events.push(EguiEv::PointerButton {
-                pos: Pos2::new(x as f32, y as f32),
-                button: button_conv(button),
-                pressed: false,
-                modifiers: Modifiers::default(),
-            });
+            if let Some(button) = button_conv(button) {
+                raw_input.events.push(EguiEv::PointerButton {
+                    pos: Pos2::new(x as f32, y as f32),
+                    button,
+                    pressed: false,
+                    modifiers: Modifiers::default(),
+                });
+            }
         }
         Event::TextEntered { unicode } => {
             if !unicode.is_control() {
