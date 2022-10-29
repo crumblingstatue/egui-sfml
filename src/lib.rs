@@ -17,7 +17,7 @@ use sfml::graphics::blend_mode::Factor;
 use sfml::graphics::{
     BlendMode, Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
 };
-use sfml::system::Vector2;
+use sfml::system::{Clock, Vector2};
 use sfml::window::clipboard;
 use sfml::{
     window::{mouse, Event, Key},
@@ -252,6 +252,7 @@ impl UserTexSource for DummyTexSource {
 
 /// `Egui` integration for SFML.
 pub struct SfEgui {
+    clock: SfBox<Clock>,
     ctx: Context,
     raw_input: RawInput,
     egui_result: FullOutput,
@@ -264,6 +265,7 @@ impl SfEgui {
     /// The size of the egui ui will be the same as `window`'s size.
     pub fn new(window: &RenderWindow) -> Self {
         Self {
+            clock: sfml::system::Clock::start(),
             raw_input: make_raw_input(window),
             ctx: Context::default(),
             egui_result: Default::default(),
@@ -280,6 +282,7 @@ impl SfEgui {
     ///
     /// The `f` parameter is a user supplied ui function that does the desired ui
     pub fn do_frame(&mut self, f: impl FnOnce(&Context)) -> Result<(), DoFrameError> {
+        self.raw_input.time = Some(self.clock.elapsed_time().as_seconds() as f64);
         // Update modifiers every frame, otherwise querying them (input.modifiers.*) doesn't seem
         // up-to-date
         self.raw_input.modifiers.alt = Key::LAlt.is_pressed() || Key::RAlt.is_pressed();
