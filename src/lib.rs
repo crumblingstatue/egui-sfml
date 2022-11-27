@@ -380,7 +380,7 @@ fn update_tex_from_delta(
         }
         ImageData::Font(font_image) => {
             let srgba: Vec<u8> = font_image
-                .srgba_pixels(1.0)
+                .srgba_pixels(None)
                 .flat_map(|c32| c32.to_array())
                 .collect();
             if w > tex.size().x as usize || h > tex.size().y as usize {
