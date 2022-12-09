@@ -35,7 +35,7 @@ fn main() {
                         ui.label("Name");
                         ui.text_edit_singleline(&mut name);
                         if ui.button("Say hello").clicked() {
-                            msg = format!("Hello {}!", name);
+                            msg = format!("Hello {name}!");
                         }
                     });
                     if !msg.is_empty() {
