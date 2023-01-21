@@ -20,7 +20,7 @@ fn main() {
                     rw.close();
                 }
                 Event::Resized { width, height } => {
-                    rw.set_view(&View::from_rect(&Rect::new(
+                    rw.set_view(&View::from_rect(Rect::new(
                         0.,
                         0.,
                         width as f32,
