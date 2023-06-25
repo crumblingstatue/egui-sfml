@@ -126,6 +126,7 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
             ctrl,
             shift,
             system: _,
+            scan: _,
         } => {
             if ctrl {
                 match code {
