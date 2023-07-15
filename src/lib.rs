@@ -290,6 +290,18 @@ impl SfEgui {
         self.handle_output()
     }
 
+    /// Alternative to `do_frame`. If you call this, it should be paired with `end_frame()`.
+    pub fn begin_frame(&mut self) {
+        self.prepare_raw_input();
+        self.ctx.begin_frame(self.raw_input.take());
+    }
+
+    /// Alternative to `do_frame`. Call `begin_frame()` first.
+    pub fn end_frame(&mut self) -> Result<(), DoFrameError> {
+        self.egui_result = self.ctx.end_frame();
+        self.handle_output()
+    }
+
     fn handle_output(&mut self) -> Result<(), DoFrameError> {
         let clip_str = &self.egui_result.platform_output.copied_text;
         if !clip_str.is_empty() {
