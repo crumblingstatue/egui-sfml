@@ -285,13 +285,12 @@ impl SfEgui {
     ///
     /// The `f` parameter is a user supplied ui function that does the desired ui
     pub fn do_frame(&mut self, f: impl FnOnce(&Context)) -> Result<(), DoFrameError> {
-        self.raw_input.time = Some(self.clock.elapsed_time().as_seconds() as f64);
-        // Update modifiers every frame, otherwise querying them (input.modifiers.*) doesn't seem
-        // up-to-date
-        self.raw_input.modifiers.alt = Key::LAlt.is_pressed() || Key::RAlt.is_pressed();
-        self.raw_input.modifiers.ctrl = Key::LControl.is_pressed() || Key::RControl.is_pressed();
-        self.raw_input.modifiers.shift = Key::LShift.is_pressed() || Key::RShift.is_pressed();
+        self.prepare_raw_input();
         self.egui_result = self.ctx.run(self.raw_input.take(), f);
+        self.handle_output()
+    }
+
+    fn handle_output(&mut self) -> Result<(), DoFrameError> {
         let clip_str = &self.egui_result.platform_output.copied_text;
         if !clip_str.is_empty() {
             clipboard::set_string(clip_str);
@@ -314,6 +313,15 @@ impl SfEgui {
             update_tex_from_delta(tex, delta)?;
         }
         Ok(())
+    }
+
+    fn prepare_raw_input(&mut self) {
+        self.raw_input.time = Some(self.clock.elapsed_time().as_seconds() as f64);
+        // Update modifiers every frame, otherwise querying them (input.modifiers.*) doesn't seem
+        // up-to-date
+        self.raw_input.modifiers.alt = Key::LAlt.is_pressed() || Key::RAlt.is_pressed();
+        self.raw_input.modifiers.ctrl = Key::LControl.is_pressed() || Key::RControl.is_pressed();
+        self.raw_input.modifiers.shift = Key::LShift.is_pressed() || Key::RShift.is_pressed();
     }
     /// Draw the ui to a `RenderWindow`.
     ///
