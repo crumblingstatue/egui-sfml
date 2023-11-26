@@ -350,6 +350,7 @@ impl SfEgui {
             mem::take(&mut self.egui_result.shapes),
             user_tex_src.unwrap_or(&mut DummyTexSource::default()),
             &self.textures,
+            self.egui_result.pixels_per_point,
         )
     }
     /// Returns a handle to the egui context
@@ -431,6 +432,7 @@ fn draw(
     shapes: Vec<egui::epaint::ClippedShape>,
     user_tex_source: &mut dyn UserTexSource,
     textures: &HashMap<TextureId, SfBox<Texture>>,
+    pixels_per_point: f32,
 ) {
     window.set_active(true);
     unsafe {
@@ -440,7 +442,7 @@ fn draw(
     for egui::ClippedPrimitive {
         clip_rect,
         primitive,
-    } in egui_ctx.tessellate(shapes)
+    } in egui_ctx.tessellate(shapes, pixels_per_point)
     {
         let mesh = match primitive {
             Primitive::Mesh(mesh) => mesh,
