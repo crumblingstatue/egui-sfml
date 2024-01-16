@@ -144,6 +144,7 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
                     modifiers: modifier(alt, ctrl, shift),
                     pressed: true,
                     repeat: false,
+                    physical_key: None,
                 });
             }
         }
@@ -161,6 +162,7 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
                     modifiers: modifier(alt, ctrl, shift),
                     pressed: false,
                     repeat: false,
+                    physical_key: None,
                 });
             }
         }
