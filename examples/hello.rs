@@ -1,3 +1,4 @@
+use egui::TextBuffer;
 use egui_sfml::{egui, SfEgui};
 use sfml::{
     graphics::{Color, RenderTarget, RenderWindow},
@@ -15,8 +16,8 @@ fn main() {
     // Step 1: Create an SfEgui
     let mut sfegui = SfEgui::new(&rw);
 
-    let mut name = String::new();
-    let mut msg = String::new();
+    let mut message = String::new();
+    let mut messages = Vec::new();
 
     while rw.is_open() {
         while let Some(event) = rw.poll_event() {
@@ -32,15 +33,18 @@ fn main() {
                 let win = egui::Window::new("Hello egui-sfml!");
                 win.show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label("Name");
-                        ui.text_edit_singleline(&mut name);
-                        if ui.button("Say hello").clicked() {
-                            msg = format!("Hello {name}!");
+                        ui.label("Message");
+                        let te_re = ui.text_edit_singleline(&mut message);
+                        if ui.button("Send").clicked()
+                            || ui.input(|inp| inp.key_pressed(egui::Key::Enter))
+                        {
+                            messages.push(message.take());
+                            te_re.request_focus();
                         }
                     });
-                    if !msg.is_empty() {
+                    for msg in &messages {
                         ui.separator();
-                        ui.label(&msg);
+                        ui.label(msg);
                     }
                 });
             })
