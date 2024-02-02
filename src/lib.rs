@@ -4,28 +4,26 @@
 
 #![warn(missing_docs)]
 
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
-use std::mem;
-
-use egui::epaint::Primitive;
-use egui::{
-    Context, Event as EguiEv, FullOutput, ImageData, Modifiers, PointerButton, Pos2, RawInput,
-    TextureId,
+pub use {egui, sfml};
+use {
+    egui::{
+        epaint::Primitive, Context, Event as EguiEv, FullOutput, ImageData, Modifiers,
+        PointerButton, Pos2, RawInput, TextureId,
+    },
+    sfml::{
+        graphics::{
+            blend_mode::Factor, BlendMode, Color, PrimitiveType, RenderStates, RenderTarget,
+            RenderWindow, Texture, Vertex,
+        },
+        system::{Clock, Vector2},
+        window::{clipboard, mouse, Event, Key},
+        SfBox,
+    },
+    std::{
+        collections::{hash_map::Entry, HashMap},
+        mem,
+    },
 };
-use sfml::graphics::blend_mode::Factor;
-use sfml::graphics::{
-    BlendMode, Color, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Texture, Vertex,
-};
-use sfml::system::{Clock, Vector2};
-use sfml::window::clipboard;
-use sfml::{
-    window::{mouse, Event, Key},
-    SfBox,
-};
-
-pub use egui;
-pub use sfml;
 
 fn button_conv(button: mouse::Button) -> Option<PointerButton> {
     let but = match button {

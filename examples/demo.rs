@@ -1,8 +1,10 @@
-use egui_demo_lib::{easy_mark, DemoWindows};
-use egui_sfml::SfEgui;
-use sfml::{
-    graphics::{Color, Rect, RenderTarget, RenderWindow, View},
-    window::{Event, Style, VideoMode},
+use {
+    egui_demo_lib::{easy_mark, DemoWindows},
+    egui_sfml::SfEgui,
+    sfml::{
+        graphics::{Color, Rect, RenderTarget, RenderWindow, View},
+        window::{Event, Style, VideoMode},
+    },
 };
 
 fn main() {

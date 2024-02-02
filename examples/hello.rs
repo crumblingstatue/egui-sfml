@@ -1,8 +1,10 @@
-use egui::TextBuffer;
-use egui_sfml::{egui, SfEgui};
-use sfml::{
-    graphics::{Color, RenderTarget, RenderWindow},
-    window::{ContextSettings, Event, Style},
+use {
+    egui::TextBuffer,
+    egui_sfml::{egui, SfEgui},
+    sfml::{
+        graphics::{Color, RenderTarget, RenderWindow},
+        window::{ContextSettings, Event, Style},
+    },
 };
 
 fn main() {

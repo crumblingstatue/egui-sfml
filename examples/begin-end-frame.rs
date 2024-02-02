@@ -1,7 +1,9 @@
-use egui_sfml::{egui, SfEgui};
-use sfml::{
-    graphics::{Color, RenderTarget, RenderWindow},
-    window::{ContextSettings, Event, Style},
+use {
+    egui_sfml::{egui, SfEgui},
+    sfml::{
+        graphics::{Color, RenderTarget, RenderWindow},
+        window::{ContextSettings, Event, Style},
+    },
 };
 
 fn window_1(ctx: &egui::Context) {
