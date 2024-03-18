@@ -1,6 +1,6 @@
 use {
     egui::TextBuffer,
-    egui_sfml::{egui, SfEgui},
+    egui_sfml::SfEgui,
     sfml::{
         graphics::{Color, RenderTarget, RenderWindow},
         window::{ContextSettings, Event, Style},
