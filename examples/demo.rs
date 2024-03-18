@@ -33,7 +33,7 @@ fn main() {
             }
         }
         sfegui
-            .do_frame(|ctx| {
+            .do_frame(&mut rw, |ctx| {
                 demo.ui(ctx);
                 egui::Window::new("EasyMark").show(ctx, |ui| {
                     easy_mark::easy_mark(ui, include_str!("../README.md"));

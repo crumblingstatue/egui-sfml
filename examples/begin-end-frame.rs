@@ -43,7 +43,7 @@ fn main() {
         window_1(sfegui.context());
         window_2(sfegui.context());
         // Step 5: End the frame
-        sfegui.end_frame().unwrap();
+        sfegui.end_frame(&mut rw).unwrap();
         // Step 6: Draw
         rw.clear(Color::rgb(95, 106, 62));
         sfegui.draw(&mut rw, None);

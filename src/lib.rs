@@ -8,14 +8,14 @@ pub use {egui, sfml};
 use {
     egui::{
         epaint::Primitive, Context, Event as EguiEv, FullOutput, ImageData, Modifiers,
-        PointerButton, Pos2, RawInput, TextureId,
+        PointerButton, Pos2, RawInput, TextureId, ViewportCommand,
     },
     sfml::{
         graphics::{
             blend_mode::Factor, BlendMode, Color, PrimitiveType, RenderStates, RenderTarget,
             RenderWindow, Texture, Vertex,
         },
-        system::{Clock, Vector2},
+        system::{Clock, Vector2, Vector2i},
         window::{clipboard, mouse, Event, Key},
         SfBox,
     },
@@ -261,6 +261,7 @@ pub struct SfEgui {
     raw_input: RawInput,
     egui_result: FullOutput,
     textures: HashMap<TextureId, SfBox<Texture>>,
+    last_window_pos: Vector2i,
 }
 
 impl SfEgui {
@@ -274,6 +275,7 @@ impl SfEgui {
             ctx: Context::default(),
             egui_result: Default::default(),
             textures: HashMap::default(),
+            last_window_pos: Vector2i::default(),
         }
     }
     /// Convert an SFML event into an egui event and add it for later use by egui.
@@ -285,10 +287,14 @@ impl SfEgui {
     /// Does an egui frame with a user supplied ui function.
     ///
     /// The `f` parameter is a user supplied ui function that does the desired ui
-    pub fn do_frame(&mut self, f: impl FnOnce(&Context)) -> Result<(), DoFrameError> {
+    pub fn do_frame(
+        &mut self,
+        rw: &mut RenderWindow,
+        f: impl FnOnce(&Context),
+    ) -> Result<(), DoFrameError> {
         self.prepare_raw_input();
         self.egui_result = self.ctx.run(self.raw_input.take(), f);
-        self.handle_output()
+        self.handle_output(rw)
     }
 
     /// Alternative to `do_frame`. If you call this, it should be paired with `end_frame()`.
@@ -298,12 +304,12 @@ impl SfEgui {
     }
 
     /// Alternative to `do_frame`. Call `begin_frame()` first.
-    pub fn end_frame(&mut self) -> Result<(), DoFrameError> {
+    pub fn end_frame(&mut self, rw: &mut RenderWindow) -> Result<(), DoFrameError> {
         self.egui_result = self.ctx.end_frame();
-        self.handle_output()
+        self.handle_output(rw)
     }
 
-    fn handle_output(&mut self) -> Result<(), DoFrameError> {
+    fn handle_output(&mut self, rw: &mut RenderWindow) -> Result<(), DoFrameError> {
         let clip_str = &self.egui_result.platform_output.copied_text;
         if !clip_str.is_empty() {
             clipboard::set_string(clip_str);
@@ -324,6 +330,33 @@ impl SfEgui {
                 }
             };
             update_tex_from_delta(tex, delta)?;
+        }
+        // TODO: Multi-viewport support
+        for (_, out) in self.egui_result.viewport_output.drain() {
+            for cmd in out.commands {
+                match cmd {
+                    ViewportCommand::Close => rw.close(),
+                    ViewportCommand::Title(s) => rw.set_title(&s),
+                    ViewportCommand::Visible(visible) => {
+                        if !visible {
+                            self.last_window_pos = rw.position();
+                        }
+                        rw.set_visible(visible);
+                        if visible {
+                            rw.set_position(self.last_window_pos);
+                        }
+                    }
+                    ViewportCommand::Focus => {
+                        // This trick forces focus where `request_focus` would
+                        // only flash the tray icon.
+                        let rw_pos = rw.position();
+                        rw.set_visible(false);
+                        rw.set_visible(true);
+                        rw.set_position(rw_pos);
+                    }
+                    _ => eprintln!("egui_sfml: Unhandled ViewportCommand: {cmd:?}"),
+                }
+            }
         }
         Ok(())
     }
