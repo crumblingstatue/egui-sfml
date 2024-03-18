@@ -53,6 +53,8 @@ fn key_conv(code: Key) -> Option<egui::Key> {
         Key::End => EKey::End,
         Key::PageUp => EKey::PageUp,
         Key::PageDown => EKey::PageDown,
+        Key::LBracket => EKey::OpenBracket,
+        Key::RBracket => EKey::CloseBracket,
         Key::Num0 => EKey::Num0,
         Key::Num1 => EKey::Num1,
         Key::Num2 => EKey::Num2,
