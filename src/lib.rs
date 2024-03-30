@@ -7,7 +7,7 @@
 pub use {egui, sfml};
 use {
     egui::{
-        epaint::Primitive, Context, Event as EguiEv, FullOutput, ImageData, Modifiers,
+        epaint::Primitive, Context, CursorIcon, Event as EguiEv, FullOutput, ImageData, Modifiers,
         PointerButton, Pos2, RawInput, TextureId, ViewportCommand,
     },
     sfml::{
@@ -16,7 +16,7 @@ use {
             RenderWindow, Texture, Vertex,
         },
         system::{Clock, Vector2, Vector2i},
-        window::{clipboard, mouse, Event, Key},
+        window::{clipboard, mouse, Cursor, CursorType, Event, Key},
         SfBox,
     },
     std::{
@@ -264,6 +264,29 @@ pub struct SfEgui {
     egui_result: FullOutput,
     textures: HashMap<TextureId, SfBox<Texture>>,
     last_window_pos: Vector2i,
+    cursors: Cursors,
+}
+
+struct Cursors {
+    arrow: SfBox<Cursor>,
+    horizontal: SfBox<Cursor>,
+    vertical: SfBox<Cursor>,
+    hand: SfBox<Cursor>,
+    cross: SfBox<Cursor>,
+    text: SfBox<Cursor>,
+}
+
+impl Default for Cursors {
+    fn default() -> Self {
+        Self {
+            arrow: Cursor::from_system(CursorType::Arrow).unwrap(),
+            horizontal: Cursor::from_system(CursorType::SizeHorizontal).unwrap(),
+            vertical: Cursor::from_system(CursorType::SizeVertical).unwrap(),
+            hand: Cursor::from_system(CursorType::Hand).unwrap(),
+            cross: Cursor::from_system(CursorType::Cross).unwrap(),
+            text: Cursor::from_system(CursorType::Text).unwrap(),
+        }
+    }
 }
 
 impl SfEgui {
@@ -278,6 +301,7 @@ impl SfEgui {
             egui_result: Default::default(),
             textures: HashMap::default(),
             last_window_pos: Vector2i::default(),
+            cursors: Cursors::default(),
         }
     }
     /// Convert an SFML event into an egui event and add it for later use by egui.
@@ -332,6 +356,29 @@ impl SfEgui {
                 }
             };
             update_tex_from_delta(tex, delta)?;
+        }
+        let new_cursor = match self.egui_result.platform_output.cursor_icon {
+            CursorIcon::Default => Some(&self.cursors.arrow),
+            CursorIcon::None => None,
+            CursorIcon::PointingHand | CursorIcon::Grab | CursorIcon::Grabbing => {
+                Some(&self.cursors.hand)
+            }
+            CursorIcon::Crosshair => Some(&self.cursors.cross),
+            CursorIcon::Text => Some(&self.cursors.text),
+            CursorIcon::ResizeHorizontal | CursorIcon::ResizeColumn => {
+                Some(&self.cursors.horizontal)
+            }
+            CursorIcon::ResizeVertical => Some(&self.cursors.vertical),
+            _ => Some(&self.cursors.arrow),
+        };
+        match new_cursor {
+            Some(cur) => {
+                rw.set_mouse_cursor_visible(true);
+                unsafe {
+                    rw.set_mouse_cursor(cur);
+                }
+            }
+            None => rw.set_mouse_cursor_visible(false),
         }
         // TODO: Multi-viewport support
         for (_, out) in self.egui_result.viewport_output.drain() {
