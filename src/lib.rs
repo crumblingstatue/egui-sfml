@@ -453,6 +453,15 @@ pub struct TextureCreateError {
     pub height: usize,
 }
 
+impl std::fmt::Display for TextureCreateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (width, height) = (self.width, self.height);
+        f.write_fmt(format_args!(
+            "Failed to create texture of size {width}x{height}"
+        ))
+    }
+}
+
 /// Error that can happen when doing an egui frame
 #[non_exhaustive]
 #[derive(Debug)]
@@ -466,6 +475,18 @@ impl From<TextureCreateError> for DoFrameError {
         Self::TextureCreateError(src)
     }
 }
+
+impl std::fmt::Display for DoFrameError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DoFrameError::TextureCreateError(e) => {
+                f.write_fmt(format_args!("Texture create error: {e}"))
+            }
+        }
+    }
+}
+
+impl std::error::Error for DoFrameError {}
 
 fn update_tex_from_delta(
     tex: &mut SfBox<Texture>,
