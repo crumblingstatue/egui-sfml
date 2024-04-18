@@ -103,6 +103,8 @@ fn key_conv(code: Key) -> Option<egui::Key> {
         Key::F10 => EKey::F10,
         Key::F11 => EKey::F11,
         Key::F12 => EKey::F12,
+        Key::Equal => EKey::Equals,
+        Key::Hyphen => EKey::Minus,
         _ => return None,
     })
 }
