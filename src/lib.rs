@@ -106,6 +106,7 @@ fn key_conv(code: Key) -> Option<egui::Key> {
         Key::Equal => EKey::Equals,
         Key::Hyphen => EKey::Minus,
         Key::Slash => EKey::Slash,
+        Key::Tilde => EKey::Backtick,
         _ => return None,
     })
 }
