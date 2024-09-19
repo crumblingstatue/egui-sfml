@@ -13,7 +13,7 @@ egui = ">=0.26.0,<=0.28"
 glu-sys = "0.1.4"
 
 [dependencies.sfml]
-git = "https://github.com/jeremyletang/rust-sfml.git"
+version = "0.22.0"
 default-features = false
 features = ["graphics"]
 
