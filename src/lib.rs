@@ -299,7 +299,7 @@ impl SfEgui {
     /// The size of the egui ui will be the same as `window`'s size.
     pub fn new(window: &RenderWindow) -> Self {
         Self {
-            clock: sfml::system::Clock::start(),
+            clock: sfml::system::Clock::start().unwrap(),
             raw_input: make_raw_input(window),
             ctx: Context::default(),
             egui_result: Default::default(),
@@ -350,7 +350,7 @@ impl SfEgui {
                 Entry::Occupied(en) => en.into_mut(),
                 Entry::Vacant(en) => {
                     let mut tex = Texture::new().unwrap();
-                    if !tex.create(w as u32, h as u32) {
+                    if tex.create(w as u32, h as u32).is_err() {
                         return Err(DoFrameError::TextureCreateError(TextureCreateError {
                             width: w,
                             height: h,
@@ -517,7 +517,7 @@ fn update_tex_from_delta(
                 .collect();
             if w > tex.size().x as usize || h > tex.size().y as usize {
                 // Resize texture
-                let ok = tex.create(w as u32, h as u32);
+                let ok = tex.create(w as u32, h as u32).is_ok();
                 if !ok {
                     return Err(TextureCreateError {
                         width: w,
@@ -541,7 +541,7 @@ fn draw(
     textures: &HashMap<TextureId, SfBox<Texture>>,
     pixels_per_point: f32,
 ) {
-    window.set_active(true);
+    let _ = window.set_active(true);
     unsafe {
         glu_sys::glEnable(glu_sys::GL_SCISSOR_TEST);
     }
@@ -616,5 +616,5 @@ fn draw(
     unsafe {
         glu_sys::glDisable(glu_sys::GL_SCISSOR_TEST);
     }
-    window.set_active(false);
+    let _ = window.set_active(false);
 }
