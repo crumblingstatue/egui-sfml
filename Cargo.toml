@@ -9,7 +9,7 @@ documentation = "https://docs.rs/egui-sfml"
 repository = "https://github.com/crumblingstatue/egui-sfml"
 
 [dependencies]
-egui = ">=0.26.0,<=0.28"
+egui = "0.29"
 glu-sys = "0.1.4"
 
 [dependencies.sfml]
@@ -19,4 +19,4 @@ default-features = false
 features = ["graphics"]
 
 [dev-dependencies]
-egui_demo_lib = ">=0.26.0,<=0.28"
+egui_demo_lib = "0.29"

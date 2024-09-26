@@ -314,28 +314,28 @@ impl SfEgui {
     pub fn add_event(&mut self, event: &Event) {
         handle_event(&mut self.raw_input, event);
     }
-    /// Does an egui frame with a user supplied ui function.
+    /// Does an egui pass with a user supplied ui function.
     ///
     /// The `f` parameter is a user supplied ui function that does the desired ui
-    pub fn do_frame(
+    pub fn do_pass(
         &mut self,
         rw: &mut RenderWindow,
-        f: impl FnOnce(&Context),
+        f: impl FnMut(&Context),
     ) -> Result<(), DoFrameError> {
         self.prepare_raw_input();
         self.egui_result = self.ctx.run(self.raw_input.take(), f);
         self.handle_output(rw)
     }
 
-    /// Alternative to `do_frame`. If you call this, it should be paired with `end_frame()`.
-    pub fn begin_frame(&mut self) {
+    /// Alternative to `do_pass`. If you call this, it should be paired with `end_pass()`.
+    pub fn begin_pass(&mut self) {
         self.prepare_raw_input();
-        self.ctx.begin_frame(self.raw_input.take());
+        self.ctx.begin_pass(self.raw_input.take());
     }
 
-    /// Alternative to `do_frame`. Call `begin_frame()` first.
-    pub fn end_frame(&mut self, rw: &mut RenderWindow) -> Result<(), DoFrameError> {
-        self.egui_result = self.ctx.end_frame();
+    /// Alternative to `do_pass`. Call `begin_pass()` first.
+    pub fn end_pass(&mut self, rw: &mut RenderWindow) -> Result<(), DoFrameError> {
+        self.egui_result = self.ctx.end_pass();
         self.handle_output(rw)
     }
 
@@ -442,7 +442,7 @@ impl SfEgui {
     /// Returns a handle to the egui context
     ///
     /// `CtxRef` can be cloned, but beware that it will be outdated after a call to
-    /// [`do_frame`](Self::do_frame)
+    /// [`do_pass`](Self::do_pass)
     pub fn context(&self) -> &Context {
         &self.ctx
     }

@@ -37,13 +37,13 @@ fn main() {
                 rw.close();
             }
         }
-        // Step 3: Begin the frame
-        sfegui.begin_frame();
+        // Step 3: Begin the pass
+        sfegui.begin_pass();
         // Step 4: Do UI stuff
         window_1(sfegui.context());
         window_2(sfegui.context());
-        // Step 5: End the frame
-        sfegui.end_frame(&mut rw).unwrap();
+        // Step 5: End the pass
+        sfegui.end_pass(&mut rw).unwrap();
         // Step 6: Draw
         rw.clear(Color::rgb(95, 106, 62));
         sfegui.draw(&mut rw, None);
