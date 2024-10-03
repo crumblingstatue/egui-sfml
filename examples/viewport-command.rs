@@ -34,7 +34,7 @@ fn main() {
             }
         }
         sf_egui
-            .do_pass(&mut rw, |ctx| ui(ctx, &mut ui_state))
+            .run(&mut rw, |_rw, ctx| ui(ctx, &mut ui_state))
             .unwrap();
         rw.clear(Color::BLACK);
         sf_egui.draw(&mut rw, None);

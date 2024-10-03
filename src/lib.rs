@@ -314,26 +314,35 @@ impl SfEgui {
     pub fn add_event(&mut self, event: &Event) {
         handle_event(&mut self.raw_input, event);
     }
-    /// Does an egui pass with a user supplied ui function.
+    /// Does a [`egui::Context::run`] to run your egui ui.
+    ///
+    /// This supports egui uis that depend on multiple passes.
+    ///
+    /// See [`egui::Context::request_discard`].
     ///
     /// The `f` parameter is a user supplied ui function that does the desired ui
-    pub fn do_pass(
+    pub fn run(
         &mut self,
         rw: &mut RenderWindow,
-        f: impl FnMut(&Context),
+        mut f: impl FnMut(&mut RenderWindow, &Context),
     ) -> Result<(), DoFrameError> {
         self.prepare_raw_input();
-        self.egui_result = self.ctx.run(self.raw_input.take(), f);
+        self.egui_result = self.ctx.run(self.raw_input.take(), |ctx| f(rw, ctx));
         self.handle_output(rw)
     }
 
-    /// Alternative to `do_pass`. If you call this, it should be paired with `end_pass()`.
+    /// Begins a (single) egui pass.
+    ///
+    /// This does not support egui uis that depend on multiple passes.
+    /// Use [`Self::run`] for that.
+    ///
+    /// If you call this, it should be paired with [`Self::end_pass`].
     pub fn begin_pass(&mut self) {
         self.prepare_raw_input();
         self.ctx.begin_pass(self.raw_input.take());
     }
 
-    /// Alternative to `do_pass`. Call `begin_pass()` first.
+    /// Ends an egui pass. Call [`Self::begin_pass`] first.
     pub fn end_pass(&mut self, rw: &mut RenderWindow) -> Result<(), DoFrameError> {
         self.egui_result = self.ctx.end_pass();
         self.handle_output(rw)
@@ -441,8 +450,7 @@ impl SfEgui {
     }
     /// Returns a handle to the egui context
     ///
-    /// `CtxRef` can be cloned, but beware that it will be outdated after a call to
-    /// [`do_pass`](Self::do_pass)
+    /// `CtxRef` can be cloned, but beware that it will be outdated after an egui pass.
     pub fn context(&self) -> &Context {
         &self.ctx
     }

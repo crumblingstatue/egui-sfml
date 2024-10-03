@@ -27,7 +27,7 @@ fn main() {
         }
         // Step 3: Do an egui frame with the desired ui function
         sfegui
-            .do_pass(&mut rw, |ctx| {
+            .run(&mut rw, |_rw, ctx| {
                 let win = egui::Window::new("Input test");
                 win.show(ctx, |ui| {
                     let evs = ui.input(|inp| inp.raw.events.clone());
