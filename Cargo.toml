@@ -14,7 +14,6 @@ glu-sys = "0.1.4"
 
 [dependencies.sfml]
 git = "https://github.com/jeremyletang/rust-sfml.git"
-branch = "vendored-sfml"
 default-features = false
 features = ["graphics"]
 
