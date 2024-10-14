@@ -449,8 +449,6 @@ impl SfEgui {
         )
     }
     /// Returns a handle to the egui context
-    ///
-    /// `CtxRef` can be cloned, but beware that it will be outdated after an egui pass.
     pub fn context(&self) -> &Context {
         &self.ctx
     }
