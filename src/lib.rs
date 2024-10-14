@@ -325,7 +325,7 @@ impl SfEgui {
         &mut self,
         rw: &mut RenderWindow,
         mut f: impl FnMut(&mut RenderWindow, &Context),
-    ) -> Result<(), DoFrameError> {
+    ) -> Result<(), PassError> {
         self.prepare_raw_input();
         self.egui_result = self.ctx.run(self.raw_input.take(), |ctx| f(rw, ctx));
         self.handle_output(rw)
@@ -343,12 +343,12 @@ impl SfEgui {
     }
 
     /// Ends an egui pass. Call [`Self::begin_pass`] first.
-    pub fn end_pass(&mut self, rw: &mut RenderWindow) -> Result<(), DoFrameError> {
+    pub fn end_pass(&mut self, rw: &mut RenderWindow) -> Result<(), PassError> {
         self.egui_result = self.ctx.end_pass();
         self.handle_output(rw)
     }
 
-    fn handle_output(&mut self, rw: &mut RenderWindow) -> Result<(), DoFrameError> {
+    fn handle_output(&mut self, rw: &mut RenderWindow) -> Result<(), PassError> {
         let clip_str = &self.egui_result.platform_output.copied_text;
         if !clip_str.is_empty() {
             clipboard::set_string(clip_str);
@@ -360,7 +360,7 @@ impl SfEgui {
                 Entry::Vacant(en) => {
                     let mut tex = Texture::new().unwrap();
                     if tex.create(w as u32, h as u32).is_err() {
-                        return Err(DoFrameError::TextureCreateError(TextureCreateError {
+                        return Err(PassError::TextureCreateError(TextureCreateError {
                             width: w,
                             height: h,
                         }));
@@ -474,31 +474,31 @@ impl std::fmt::Display for TextureCreateError {
     }
 }
 
-/// Error that can happen when doing an egui frame
+/// Error that can happen during an egui pass
 #[non_exhaustive]
 #[derive(Debug)]
-pub enum DoFrameError {
+pub enum PassError {
     /// Failed to create a texture
     TextureCreateError(TextureCreateError),
 }
 
-impl From<TextureCreateError> for DoFrameError {
+impl From<TextureCreateError> for PassError {
     fn from(src: TextureCreateError) -> Self {
         Self::TextureCreateError(src)
     }
 }
 
-impl std::fmt::Display for DoFrameError {
+impl std::fmt::Display for PassError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DoFrameError::TextureCreateError(e) => {
+            PassError::TextureCreateError(e) => {
                 f.write_fmt(format_args!("Texture create error: {e}"))
             }
         }
     }
 }
 
-impl std::error::Error for DoFrameError {}
+impl std::error::Error for PassError {}
 
 fn update_tex_from_delta(
     tex: &mut SfBox<Texture>,

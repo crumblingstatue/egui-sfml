@@ -12,7 +12,8 @@ fn main() {
         "Input test",
         Style::CLOSE,
         &ContextSettings::default(),
-    ).unwrap();
+    )
+    .unwrap();
     rw.set_vertical_sync_enabled(true);
     // Step 1: Create an SfEgui
     let mut sfegui = SfEgui::new(&rw);
