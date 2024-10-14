@@ -21,7 +21,7 @@ fn main() {
         "ViewportCommand test",
         Style::DEFAULT,
         &ContextSettings::default(),
-    );
+    ).unwrap();
     rw.set_vertical_sync_enabled(true);
     let mut sf_egui = SfEgui::new(&rw);
     let mut ui_state = UiState::default();

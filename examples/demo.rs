@@ -9,7 +9,7 @@ use {
 
 fn main() {
     let vm = VideoMode::desktop_mode();
-    let mut rw = RenderWindow::new(vm, "Egui test", Style::NONE, &Default::default());
+    let mut rw = RenderWindow::new(vm, "Egui test", Style::NONE, &Default::default()).unwrap();
     rw.set_position((0, 0).into());
     rw.set_vertical_sync_enabled(true);
     let mut sfegui = SfEgui::new(&rw);
