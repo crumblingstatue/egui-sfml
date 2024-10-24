@@ -257,12 +257,14 @@ impl UserTexSource for DummyTexSource {
     }
 }
 
+type TextureMap = HashMap<TextureId, FBox<Texture>>;
+
 /// `Egui` integration for SFML.
 pub struct SfEgui {
     clock: FBox<Clock>,
     ctx: Context,
     raw_input: RawInput,
-    textures: HashMap<TextureId, FBox<Texture>>,
+    textures: TextureMap,
     last_window_pos: Vector2i,
     cursors: Cursors,
 }
@@ -304,7 +306,7 @@ impl SfEgui {
             clock: sfml::system::Clock::start().unwrap(),
             raw_input: make_raw_input(window),
             ctx: Context::default(),
-            textures: HashMap::default(),
+            textures: TextureMap::default(),
             last_window_pos: Vector2i::default(),
             cursors: Cursors::default(),
         }

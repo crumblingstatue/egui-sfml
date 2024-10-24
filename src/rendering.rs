@@ -1,14 +1,10 @@
 use {
-    crate::{TextureCreateError, UserTexSource},
+    crate::{TextureCreateError, TextureMap, UserTexSource},
     egui::{epaint::Primitive, ImageData, TextureId},
-    sfml::{
-        cpp::FBox,
-        graphics::{
-            blend_mode::Factor, BlendMode, Color, PrimitiveType, RenderStates, RenderTarget as _,
-            RenderWindow, Texture, Vertex,
-        },
+    sfml::graphics::{
+        blend_mode::Factor, BlendMode, Color, PrimitiveType, RenderStates, RenderTarget as _,
+        RenderWindow, Texture, Vertex,
     },
-    std::collections::HashMap,
 };
 
 pub(super) fn update_tex_from_delta(
@@ -52,7 +48,7 @@ pub(super) fn draw(
     egui_ctx: &egui::Context,
     shapes: Vec<egui::epaint::ClippedShape>,
     user_tex_source: &mut dyn UserTexSource,
-    textures: &HashMap<TextureId, FBox<Texture>>,
+    textures: &TextureMap,
     pixels_per_point: f32,
 ) {
     let _ = window.set_active(true);
