@@ -11,13 +11,13 @@ use {
         PointerButton, Pos2, RawInput, TextureId, ViewportCommand,
     },
     sfml::{
+        cpp::FBox,
         graphics::{
             blend_mode::Factor, BlendMode, Color, PrimitiveType, RenderStates, RenderTarget,
             RenderWindow, Texture, Vertex,
         },
         system::{Clock, Vector2, Vector2i},
         window::{clipboard, mouse, Cursor, CursorType, Event, Key},
-        SfBox,
     },
     std::{
         collections::{hash_map::Entry, HashMap},
@@ -243,7 +243,7 @@ pub trait UserTexSource {
 
 /// A dummy texture source in case you don't care about providing user textures
 struct DummyTexSource {
-    tex: SfBox<Texture>,
+    tex: FBox<Texture>,
 }
 
 impl Default for DummyTexSource {
@@ -262,22 +262,22 @@ impl UserTexSource for DummyTexSource {
 
 /// `Egui` integration for SFML.
 pub struct SfEgui {
-    clock: SfBox<Clock>,
+    clock: FBox<Clock>,
     ctx: Context,
     raw_input: RawInput,
     egui_result: FullOutput,
-    textures: HashMap<TextureId, SfBox<Texture>>,
+    textures: HashMap<TextureId, FBox<Texture>>,
     last_window_pos: Vector2i,
     cursors: Cursors,
 }
 
 struct Cursors {
-    arrow: SfBox<Cursor>,
-    horizontal: SfBox<Cursor>,
-    vertical: SfBox<Cursor>,
-    hand: SfBox<Cursor>,
-    cross: SfBox<Cursor>,
-    text: SfBox<Cursor>,
+    arrow: FBox<Cursor>,
+    horizontal: FBox<Cursor>,
+    vertical: FBox<Cursor>,
+    hand: FBox<Cursor>,
+    cross: FBox<Cursor>,
+    text: FBox<Cursor>,
 }
 
 impl Default for Cursors {
@@ -499,7 +499,7 @@ impl std::fmt::Display for PassError {
 impl std::error::Error for PassError {}
 
 fn update_tex_from_delta(
-    tex: &mut SfBox<Texture>,
+    tex: &mut FBox<Texture>,
     delta: &egui::epaint::ImageDelta,
 ) -> Result<(), TextureCreateError> {
     let mut x = 0;
@@ -544,7 +544,7 @@ fn draw(
     egui_ctx: &egui::Context,
     shapes: Vec<egui::epaint::ClippedShape>,
     user_tex_source: &mut dyn UserTexSource,
-    textures: &HashMap<TextureId, SfBox<Texture>>,
+    textures: &HashMap<TextureId, FBox<Texture>>,
     pixels_per_point: f32,
 ) {
     let _ = window.set_active(true);
@@ -578,15 +578,6 @@ fn draw(
             );
             vertices.push(sf_v);
         }
-        let mut rs = RenderStates::default();
-        rs.blend_mode = BlendMode {
-            color_src_factor: Factor::One,
-            color_dst_factor: Factor::OneMinusSrcAlpha,
-            alpha_src_factor: Factor::OneMinusDstAlpha,
-            alpha_dst_factor: Factor::One,
-            ..Default::default()
-        };
-        rs.set_texture(Some(tex));
         let pixels_per_point = 1.;
         let win_size = window.size();
         let width_in_pixels = win_size.x;
@@ -616,6 +607,17 @@ fn draw(
                 (clip_max_y - clip_min_y) as _,
             );
         }
+        let rs = RenderStates {
+            blend_mode: BlendMode {
+                color_src_factor: Factor::One,
+                color_dst_factor: Factor::OneMinusSrcAlpha,
+                alpha_src_factor: Factor::OneMinusDstAlpha,
+                alpha_dst_factor: Factor::One,
+                ..Default::default()
+            },
+            texture: Some(tex),
+            ..Default::default()
+        };
         window.draw_primitives(&vertices, PrimitiveType::TRIANGLES, &rs);
         vertices.clear();
     }

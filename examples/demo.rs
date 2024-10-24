@@ -22,12 +22,9 @@ fn main() {
                     rw.close();
                 }
                 Event::Resized { width, height } => {
-                    rw.set_view(&View::from_rect(Rect::new(
-                        0.,
-                        0.,
-                        width as f32,
-                        height as f32,
-                    )));
+                    rw.set_view(
+                        &View::from_rect(Rect::new(0., 0., width as f32, height as f32)).unwrap(),
+                    );
                 }
                 _ => {}
             }
