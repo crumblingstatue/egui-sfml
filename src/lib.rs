@@ -9,8 +9,7 @@ mod rendering;
 pub use {egui, sfml};
 use {
     egui::{
-        Context, CursorIcon, Event as EguiEv, FullOutput, Modifiers, PointerButton, Pos2, RawInput,
-        TextureId, ViewportCommand,
+        Context, CursorIcon, Modifiers, PointerButton, Pos2, RawInput, TextureId, ViewportCommand,
     },
     sfml::{
         cpp::FBox,
@@ -169,11 +168,11 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
         Event::MouseMoved { x, y } => {
             raw_input
                 .events
-                .push(EguiEv::PointerMoved(Pos2::new(x as f32, y as f32)));
+                .push(egui::Event::PointerMoved(Pos2::new(x as f32, y as f32)));
         }
         Event::MouseButtonPressed { x, y, button } => {
             if let Some(button) = button_conv(button) {
-                raw_input.events.push(EguiEv::PointerButton {
+                raw_input.events.push(egui::Event::PointerButton {
                     pos: Pos2::new(x as f32, y as f32),
                     button,
                     pressed: true,
@@ -183,7 +182,7 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
         }
         Event::MouseButtonReleased { x, y, button } => {
             if let Some(button) = button_conv(button) {
-                raw_input.events.push(EguiEv::PointerButton {
+                raw_input.events.push(egui::Event::PointerButton {
                     pos: Pos2::new(x as f32, y as f32),
                     button,
                     pressed: false,
@@ -193,14 +192,16 @@ fn handle_event(raw_input: &mut egui::RawInput, event: &sfml::window::Event) {
         }
         Event::TextEntered { unicode } => {
             if !unicode.is_control() {
-                raw_input.events.push(EguiEv::Text(unicode.to_string()));
+                raw_input
+                    .events
+                    .push(egui::Event::Text(unicode.to_string()));
             }
         }
         Event::MouseWheelScrolled { delta, .. } => {
             if sfml::window::Key::LControl.is_pressed() {
                 raw_input
                     .events
-                    .push(EguiEv::Zoom(if delta > 0.0 { 1.1 } else { 0.9 }));
+                    .push(egui::Event::Zoom(if delta > 0.0 { 1.1 } else { 0.9 }));
             }
         }
         Event::Resized { width, height } => {
@@ -327,8 +328,13 @@ impl SfEgui {
         mut f: impl FnMut(&mut RenderWindow, &Context),
     ) -> Result<DrawInput, PassError> {
         self.prepare_raw_input();
-        let mut out = self.ctx.run(self.raw_input.take(), |ctx| f(rw, ctx));
-        self.handle_output(rw, &mut out)?;
+        let out = self.ctx.run(self.raw_input.take(), |ctx| f(rw, ctx));
+        self.handle_output(
+            rw,
+            out.platform_output,
+            out.textures_delta,
+            out.viewport_output,
+        )?;
         Ok(DrawInput {
             shapes: out.shapes,
             pixels_per_point: out.pixels_per_point,
@@ -348,8 +354,13 @@ impl SfEgui {
 
     /// Ends an egui pass. Call [`Self::begin_pass`] first.
     pub fn end_pass(&mut self, rw: &mut RenderWindow) -> Result<DrawInput, PassError> {
-        let mut out = self.ctx.end_pass();
-        self.handle_output(rw, &mut out)?;
+        let out = self.ctx.end_pass();
+        self.handle_output(
+            rw,
+            out.platform_output,
+            out.textures_delta,
+            out.viewport_output,
+        )?;
         Ok(DrawInput {
             shapes: out.shapes,
             pixels_per_point: out.pixels_per_point,
@@ -359,23 +370,25 @@ impl SfEgui {
     fn handle_output(
         &mut self,
         rw: &mut RenderWindow,
-        out: &mut FullOutput,
+        platform_output: egui::PlatformOutput,
+        textures_delta: egui::TexturesDelta,
+        viewport_output: egui::ViewportIdMap<egui::ViewportOutput>,
     ) -> Result<(), PassError> {
-        let clip_str = &out.platform_output.copied_text;
+        let clip_str = &platform_output.copied_text;
         if !clip_str.is_empty() {
             clipboard::set_string(clip_str);
         }
-        for (id, delta) in &out.textures_delta.set {
+        for (id, delta) in &textures_delta.set {
             let tex = self
                 .textures
                 .entry(*id)
                 .or_insert_with(|| Texture::new().unwrap());
             rendering::update_tex_from_delta(tex, delta)?;
         }
-        for id in &out.textures_delta.free {
+        for id in &textures_delta.free {
             self.textures.remove(id);
         }
-        let new_cursor = match out.platform_output.cursor_icon {
+        let new_cursor = match platform_output.cursor_icon {
             CursorIcon::Default => Some(&self.cursors.arrow),
             CursorIcon::None => None,
             CursorIcon::PointingHand | CursorIcon::Grab | CursorIcon::Grabbing => {
@@ -399,7 +412,7 @@ impl SfEgui {
             None => rw.set_mouse_cursor_visible(false),
         }
         // TODO: Multi-viewport support
-        for (_, out) in out.viewport_output.drain() {
+        for (_, out) in viewport_output {
             for cmd in out.commands {
                 match cmd {
                     ViewportCommand::Close => rw.close(),
