@@ -216,6 +216,7 @@ fn make_raw_input(window: &RenderWindow) -> RawInput {
     let Vector2 { x: w, y: h } = window.size();
     RawInput {
         screen_rect: Some(raw_input_screen_rect(w, h)),
+        max_texture_side: Some(Texture::maximum_size() as usize),
         ..Default::default()
     }
 }
