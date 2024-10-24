@@ -15,13 +15,8 @@ pub(super) fn update_tex_from_delta(
     tex: &mut Texture,
     delta: &egui::epaint::ImageDelta,
 ) -> Result<(), TextureCreateError> {
-    let mut x = 0;
-    let mut y = 0;
     let [w, h] = delta.image.size();
-    if let Some([xx, yy]) = delta.pos {
-        x = xx as u32;
-        y = yy as u32;
-    }
+    let [x, y] = delta.pos.map_or([0, 0], |[x, y]| [x as u32, y as u32]);
     match &delta.image {
         ImageData::Color(color) => {
             let srgba: Vec<u8> = color.pixels.iter().flat_map(|c32| c32.to_array()).collect();
