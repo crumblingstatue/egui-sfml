@@ -369,6 +369,9 @@ impl SfEgui {
             };
             rendering::update_tex_from_delta(tex, delta)?;
         }
+        for id in &self.egui_result.textures_delta.free {
+            self.textures.remove(id);
+        }
         let new_cursor = match self.egui_result.platform_output.cursor_icon {
             CursorIcon::Default => Some(&self.cursors.arrow),
             CursorIcon::None => None,
