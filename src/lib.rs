@@ -18,10 +18,7 @@ use {
         system::{Clock, Vector2, Vector2i},
         window::{clipboard, mouse, Cursor, CursorType, Event, Key},
     },
-    std::{
-        collections::{hash_map::Entry, HashMap},
-        mem,
-    },
+    std::{collections::HashMap, mem},
 };
 
 fn button_conv(button: mouse::Button) -> Option<PointerButton> {
@@ -353,20 +350,10 @@ impl SfEgui {
             clipboard::set_string(clip_str);
         }
         for (id, delta) in &self.egui_result.textures_delta.set {
-            let [w, h] = delta.image.size();
-            let tex = match self.textures.entry(*id) {
-                Entry::Occupied(en) => en.into_mut(),
-                Entry::Vacant(en) => {
-                    let mut tex = Texture::new().unwrap();
-                    if tex.create(w as u32, h as u32).is_err() {
-                        return Err(PassError::TextureCreateError(TextureCreateError {
-                            width: w,
-                            height: h,
-                        }));
-                    }
-                    en.insert(tex)
-                }
-            };
+            let tex = self
+                .textures
+                .entry(*id)
+                .or_insert_with(|| Texture::new().unwrap());
             rendering::update_tex_from_delta(tex, delta)?;
         }
         for id in &self.egui_result.textures_delta.free {
