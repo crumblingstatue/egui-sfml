@@ -499,7 +499,7 @@ impl std::fmt::Display for PassError {
 impl std::error::Error for PassError {}
 
 fn update_tex_from_delta(
-    tex: &mut FBox<Texture>,
+    tex: &mut Texture,
     delta: &egui::epaint::ImageDelta,
 ) -> Result<(), TextureCreateError> {
     let mut x = 0;
