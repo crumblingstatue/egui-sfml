@@ -34,11 +34,11 @@ fn main() {
                 rw.close();
             }
         }
-        sf_egui
+        let di = sf_egui
             .run(&mut rw, |_rw, ctx| ui(ctx, &mut ui_state))
             .unwrap();
         rw.clear(Color::BLACK);
-        sf_egui.draw(&mut rw, None);
+        sf_egui.draw(di, &mut rw, None);
         rw.display();
     }
 }

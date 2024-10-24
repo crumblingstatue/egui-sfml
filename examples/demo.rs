@@ -29,7 +29,7 @@ fn main() {
                 _ => {}
             }
         }
-        sfegui
+        let di = sfegui
             .run(&mut rw, |_rw, ctx| {
                 demo.ui(ctx);
                 egui::Window::new("EasyMark").show(ctx, |ui| {
@@ -38,7 +38,7 @@ fn main() {
             })
             .unwrap();
         rw.clear(Color::BLACK);
-        sfegui.draw(&mut rw, None);
+        sfegui.draw(di, &mut rw, None);
         rw.display();
     }
 }

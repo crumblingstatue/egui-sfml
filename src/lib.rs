@@ -18,7 +18,7 @@ use {
         system::{Clock, Vector2, Vector2i},
         window::{clipboard, mouse, Cursor, CursorType, Event, Key},
     },
-    std::{collections::HashMap, mem},
+    std::collections::HashMap,
 };
 
 fn button_conv(button: mouse::Button) -> Option<PointerButton> {
@@ -261,7 +261,6 @@ pub struct SfEgui {
     clock: FBox<Clock>,
     ctx: Context,
     raw_input: RawInput,
-    egui_result: FullOutput,
     textures: HashMap<TextureId, FBox<Texture>>,
     last_window_pos: Vector2i,
     cursors: Cursors,
@@ -289,6 +288,12 @@ impl Default for Cursors {
     }
 }
 
+/// Data required to draw the egui ui
+pub struct DrawInput {
+    shapes: Vec<egui::epaint::ClippedShape>,
+    pixels_per_point: f32,
+}
+
 impl SfEgui {
     /// Create a new `SfEgui`.
     ///
@@ -298,7 +303,6 @@ impl SfEgui {
             clock: sfml::system::Clock::start().unwrap(),
             raw_input: make_raw_input(window),
             ctx: Context::default(),
-            egui_result: Default::default(),
             textures: HashMap::default(),
             last_window_pos: Vector2i::default(),
             cursors: Cursors::default(),
@@ -321,10 +325,14 @@ impl SfEgui {
         &mut self,
         rw: &mut RenderWindow,
         mut f: impl FnMut(&mut RenderWindow, &Context),
-    ) -> Result<(), PassError> {
+    ) -> Result<DrawInput, PassError> {
         self.prepare_raw_input();
-        self.egui_result = self.ctx.run(self.raw_input.take(), |ctx| f(rw, ctx));
-        self.handle_output(rw)
+        let mut out = self.ctx.run(self.raw_input.take(), |ctx| f(rw, ctx));
+        self.handle_output(rw, &mut out)?;
+        Ok(DrawInput {
+            shapes: out.shapes,
+            pixels_per_point: out.pixels_per_point,
+        })
     }
 
     /// Begins a (single) egui pass.
@@ -339,27 +347,35 @@ impl SfEgui {
     }
 
     /// Ends an egui pass. Call [`Self::begin_pass`] first.
-    pub fn end_pass(&mut self, rw: &mut RenderWindow) -> Result<(), PassError> {
-        self.egui_result = self.ctx.end_pass();
-        self.handle_output(rw)
+    pub fn end_pass(&mut self, rw: &mut RenderWindow) -> Result<DrawInput, PassError> {
+        let mut out = self.ctx.end_pass();
+        self.handle_output(rw, &mut out)?;
+        Ok(DrawInput {
+            shapes: out.shapes,
+            pixels_per_point: out.pixels_per_point,
+        })
     }
 
-    fn handle_output(&mut self, rw: &mut RenderWindow) -> Result<(), PassError> {
-        let clip_str = &self.egui_result.platform_output.copied_text;
+    fn handle_output(
+        &mut self,
+        rw: &mut RenderWindow,
+        out: &mut FullOutput,
+    ) -> Result<(), PassError> {
+        let clip_str = &out.platform_output.copied_text;
         if !clip_str.is_empty() {
             clipboard::set_string(clip_str);
         }
-        for (id, delta) in &self.egui_result.textures_delta.set {
+        for (id, delta) in &out.textures_delta.set {
             let tex = self
                 .textures
                 .entry(*id)
                 .or_insert_with(|| Texture::new().unwrap());
             rendering::update_tex_from_delta(tex, delta)?;
         }
-        for id in &self.egui_result.textures_delta.free {
+        for id in &out.textures_delta.free {
             self.textures.remove(id);
         }
-        let new_cursor = match self.egui_result.platform_output.cursor_icon {
+        let new_cursor = match out.platform_output.cursor_icon {
             CursorIcon::Default => Some(&self.cursors.arrow),
             CursorIcon::None => None,
             CursorIcon::PointingHand | CursorIcon::Grab | CursorIcon::Grabbing => {
@@ -383,7 +399,7 @@ impl SfEgui {
             None => rw.set_mouse_cursor_visible(false),
         }
         // TODO: Multi-viewport support
-        for (_, out) in self.egui_result.viewport_output.drain() {
+        for (_, out) in out.viewport_output.drain() {
             for cmd in out.commands {
                 match cmd {
                     ViewportCommand::Close => rw.close(),
@@ -425,16 +441,17 @@ impl SfEgui {
     /// Takes an optional [`UserTexSource`] to act as a user texture source.
     pub fn draw(
         &mut self,
+        input: DrawInput,
         window: &mut RenderWindow,
         user_tex_src: Option<&mut dyn UserTexSource>,
     ) {
         rendering::draw(
             window,
             &self.ctx,
-            mem::take(&mut self.egui_result.shapes),
+            input.shapes,
             user_tex_src.unwrap_or(&mut DummyTexSource::default()),
             &self.textures,
-            self.egui_result.pixels_per_point,
+            input.pixels_per_point,
         )
     }
     /// Returns a handle to the egui context

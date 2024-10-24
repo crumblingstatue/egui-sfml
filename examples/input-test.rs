@@ -27,7 +27,7 @@ fn main() {
             }
         }
         // Step 3: Do an egui frame with the desired ui function
-        sfegui
+        let di = sfegui
             .run(&mut rw, |_rw, ctx| {
                 let win = egui::Window::new("Input test");
                 win.show(ctx, |ui| {
@@ -40,7 +40,7 @@ fn main() {
             .unwrap();
         // Step 4: Draw
         rw.clear(Color::rgb(95, 106, 62));
-        sfegui.draw(&mut rw, None);
+        sfegui.draw(di, &mut rw, None);
         rw.display();
     }
 }

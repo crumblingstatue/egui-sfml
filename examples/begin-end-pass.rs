@@ -44,10 +44,10 @@ fn main() {
         window_1(sfegui.context());
         window_2(sfegui.context());
         // Step 5: End the pass
-        sfegui.end_pass(&mut rw).unwrap();
+        let di = sfegui.end_pass(&mut rw).unwrap();
         // Step 6: Draw
         rw.clear(Color::rgb(95, 106, 62));
-        sfegui.draw(&mut rw, None);
+        sfegui.draw(di, &mut rw, None);
         rw.display();
     }
 }
