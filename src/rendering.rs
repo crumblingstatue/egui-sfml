@@ -16,9 +16,7 @@ pub(super) fn update_tex_from_delta(
     match &delta.image {
         ImageData::Color(color) => {
             let srgba: Vec<u8> = color.pixels.iter().flat_map(|c32| c32.to_array()).collect();
-            unsafe {
-                tex.update_from_pixels(&srgba, w as u32, h as u32, x, y);
-            }
+            tex.update_from_pixels(&srgba, w as u32, h as u32, x, y);
         }
         ImageData::Font(font_image) => {
             let srgba: Vec<u8> = font_image
@@ -35,9 +33,7 @@ pub(super) fn update_tex_from_delta(
                     });
                 }
             }
-            unsafe {
-                tex.update_from_pixels(&srgba, w as u32, h as u32, x, y);
-            }
+            tex.update_from_pixels(&srgba, w as u32, h as u32, x, y);
         }
     }
     Ok(())
