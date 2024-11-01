@@ -2,7 +2,7 @@ use {
     egui::ViewportCommand,
     egui_sfml::SfEgui,
     sfml::{
-        graphics::{Color, RenderTarget, RenderWindow},
+        graphics::{Color, Rect, RenderTarget, RenderWindow, View},
         window::{ContextSettings, Event, Style},
     },
     std::time::Instant,
@@ -26,12 +26,18 @@ fn main() {
     rw.set_vertical_sync_enabled(true);
     let mut sf_egui = SfEgui::new(&rw);
     let mut ui_state = UiState::default();
+    let mut view = View::new().unwrap();
 
     while rw.is_open() {
         while let Some(ev) = rw.poll_event() {
             sf_egui.add_event(&ev);
-            if matches!(ev, Event::Closed) {
-                rw.close();
+            match ev {
+                Event::Closed => rw.close(),
+                Event::Resized { width, height } => {
+                    view.reset(Rect::new(0., 0., width as f32, height as f32));
+                    rw.set_view(&view);
+                }
+                _ => {}
             }
         }
         let di = sf_egui
