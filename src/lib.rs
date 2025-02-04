@@ -377,10 +377,6 @@ impl SfEgui {
         textures_delta: egui::TexturesDelta,
         viewport_output: egui::ViewportIdMap<egui::ViewportOutput>,
     ) -> Result<(), PassError> {
-        let clip_str = &platform_output.copied_text;
-        if !clip_str.is_empty() {
-            clipboard::set_string(clip_str);
-        }
         for (id, delta) in &textures_delta.set {
             let tex = self
                 .textures
@@ -413,6 +409,19 @@ impl SfEgui {
                 }
             }
             None => rw.set_mouse_cursor_visible(false),
+        }
+        for cmd in platform_output.commands {
+            match cmd {
+                egui::OutputCommand::CopyText(txt) => {
+                    clipboard::set_string(&txt);
+                }
+                egui::OutputCommand::CopyImage(_img) => {
+                    eprintln!("egui-sfml: Unimplemented image copy");
+                }
+                egui::OutputCommand::OpenUrl(_url) => {
+                    eprintln!("egui-sfml: Unimplemented url open");
+                }
+            }
         }
         // TODO: Multi-viewport support
         for (_, out) in viewport_output {
