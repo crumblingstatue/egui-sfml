@@ -9,13 +9,13 @@ documentation = "https://docs.rs/egui-sfml"
 repository = "https://github.com/crumblingstatue/egui-sfml"
 
 [dependencies]
-egui = "0.31"
+egui = "0.32"
 glu-sys = "0.1.4"
 
 [dependencies.sfml]
-version = "0.24.0"
+version = "0.25.0"
 default-features = false
 features = ["graphics"]
 
 [dev-dependencies]
-egui_demo_lib = "0.31"
+egui_demo_lib = "0.32"
