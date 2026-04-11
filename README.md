@@ -1,3 +1,5 @@
+UNMAINTAINED: The active version is https://github.com/crumblingstatue/egui-sf2g , which uses sf2g instead of sfml.
+
 # egui-sfml
 
 [![Crates.io](https://img.shields.io/crates/v/egui-sfml)](https://crates.io/crates/egui-sfml)
